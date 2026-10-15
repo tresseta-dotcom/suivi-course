@@ -516,7 +516,8 @@ function gpsNear(lat,lon,i0,i1){const L=TR.ll,cl=Math.cos(lat*Math.PI/180),mx=11
     let u=l2?-(ax*dx+ay*dy)/l2:0;u=Math.max(0,Math.min(1,u));const x=ax+u*dx,y=ay+u*dy,d=Math.hypot(x,y);if(!best||d<best.d)best={f:i+u,d:d};}return best;}
 function gpsUse(lat,lon,acc,ts){const R=RACES[cur],pts=R.pts,s=state(),E=s.e,last=lastOf(s,pts);if(last>=pts.length-1||(!last&&!preOk(s)))return;
   const A0=last?E[last]:0,n=last+1,n2=Math.min(n+1,pts.length-1),b=gpsNear(lat,lon,TR.cp[last]-6,TR.cp[n2]+1);if(!b)return;
-  if(b.d>Math.max(200,acc+100)){GPS.st=last?"GPS hors trace":"";gpsSt();return;}
+  // Position reçue mais loin du parcours (ou test à la maison) : on l'affiche quand même, avec la distance, pour voir que le GPS marche.
+  if(b.d>Math.max(200,acc+100)){const d=b.d;GPS.st="GPS hors trace · "+(d<1000?Math.round(d)+" m":d<10000?(d/1000).toFixed(1)+" km":Math.round(d/1000)+" km");gpsSt();return;}
   const km=lerp(TR.km,b.f),el=elapsedNow(toMin(s.start),A0,s.t0)-(Date.now()-ts)/60000;GPS.st="";
   if(km<pts[last][1]-0.3){gpsSt();return;}
   if(km>pts[n][1]+0.3&&n<pts.length-1){const q=pts[n],p2=pts[n2],Pk=q[2]+(km-q[1])/((p2[1]-q[1])||1)*(p2[2]-q[2]),reff=LIVE&&LIVE.reff||1;
