@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Suivi de course 2027</title>
+<script>try{var th=JSON.parse(localStorage.getItem("theme"));if(th==="dark"||th==="light")document.documentElement.dataset.theme=th;}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style id="appstyle">
+:root{
+  --bg:#F5F7F4; --card:#FFFFFF; --ink:#13202B; --muted:#5B6873; --line:#D5DCD8;
+  --red:#C8102E; --green:#1B7A3E; --blue:#1565C0; --orange:#D9730D; --yellow:#B88A00; --amber:#A86400; --btn:#13202B; --btnink:#FFFFFF; --done:#EEF3EF;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --bg:#050505; --card:#0E0E0E; --ink:#F0A898; --muted:#A8705F; --line:#3A1712;
+  --red:#FF4B3A; --green:#3CC46E; --blue:#5AA9FF; --orange:#FF9A3C; --yellow:#F5CF3A; --amber:#F2B233; --btn:#F0A898; --btnink:#050505; --done:#120A08; } }
+:root[data-theme="dark"]{
+  --bg:#050505; --card:#0E0E0E; --ink:#F0A898; --muted:#A8705F; --line:#3A1712;
+  --red:#FF4B3A; --green:#3CC46E; --blue:#5AA9FF; --orange:#FF9A3C; --yellow:#F5CF3A; --amber:#F2B233; --btn:#F0A898; --btnink:#050505; --done:#120A08; }
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.45 Barlow,"Helvetica Neue",Arial,sans-serif;-webkit-text-size-adjust:100%}
+.wrap{max-width:640px;margin:0 auto;padding:14px 14px 48px}
+.num{font-family:"Barlow Condensed","Arial Narrow",Arial,sans-serif}
+header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.brand{display:flex;align-items:center;gap:8px;font-family:"Barlow Condensed",sans-serif;font-size:21px;font-weight:700;line-height:1.1;min-width:0}.logo{width:28px;height:28px;flex:0 0 auto}
+.balise{display:inline-flex;flex-direction:column;width:26px;height:17px;border-radius:2px;overflow:hidden;border:1px solid var(--line)}
+.balise i{flex:1;background:#fff}.balise i+i{background:#C8102E}
+.theme{background:none;border:1px solid var(--line);color:var(--ink);border-radius:999px;padding:7px 12px;font:inherit;font-size:14px}
+.tabs[hidden]{display:none}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px}
+.tabs button{border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:10px 4px;font:600 15px/1.15 Barlow,sans-serif}
+.tabs button[aria-pressed="true"]{border-color:var(--ink);background:var(--ink);color:var(--bg)}
+.tabs small{display:block;font-weight:400;font-size:12px;opacity:.8}
+.hero{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 16px 14px;margin-bottom:12px}
+.delta{font-size:clamp(64px,22vw,104px);font-weight:700;line-height:.9;letter-spacing:-.01em}
+.delta.ahead{color:var(--blue)}.delta.band{color:var(--green)}.delta.behind{color:var(--orange)}.delta.boom{color:var(--red)}
+.state.warn{color:var(--red)}
+.now.confirm{background:var(--red);color:#fff}
+.state{font-size:17px;font-weight:600;margin:4px 0 10px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
+.k{font-size:13px;color:var(--muted)}
+.v{font-family:"Barlow Condensed",sans-serif;font-size:28px;font-weight:600;line-height:1.05}
+.start[hidden]{display:none}
+.start{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-bottom:12px}
+input[type=time],input.el{font:600 20px "Barlow Condensed",sans-serif;color:var(--ink);background:var(--bg);border:2px solid var(--line);border-radius:8px;padding:6px 8px;min-width:108px}
+input[type=time]:focus-visible,input.el:focus-visible,button:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+ol{list-style:none;margin:0;padding:0}
+li.pt{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px}
+li.pt.done{background:var(--done)}
+li.pt.next{border:2px solid var(--ink)}
+.row1{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.name{font-weight:600;font-size:17px}
+.km{color:var(--muted);font-size:14px;white-space:nowrap;text-align:right}
+.cum{display:block;font-size:13px}
+
+.plan{font-size:14px;color:var(--muted);margin:2px 0 8px}
+.plan>span{display:block}
+.nw{white-space:nowrap}
+.fac{font-weight:400;color:var(--muted);white-space:nowrap}.fac.hard{color:var(--red)}.fac.easy{color:var(--green)}
+.pd{font-family:"Barlow Condensed",sans-serif;font-size:19px;font-weight:700;margin-left:6px;white-space:nowrap}.pd.ahead{color:var(--blue)}.pd.band{color:var(--green)}.pd.behind{color:var(--orange)}.pd.boom{color:var(--red)}
+.v small{font-size:17px;font-weight:500;color:var(--muted);margin-left:4px}
+.plan b{color:var(--ink);font-weight:600}
+.entry{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+input.el{width:120px}
+input.el[readonly]{border-style:dashed;color:var(--muted);background:transparent}
+.now.edit{background:none;color:var(--ink);border:1px solid var(--line)}
+.now{background:var(--btn);color:var(--btnink);border:0;border-radius:8px;padding:10px 14px;font:600 16px Barlow,sans-serif;min-height:44px}
+.clear.armed{color:var(--red);font-weight:600;text-decoration:none;border:1px solid var(--red);border-radius:8px;padding:8px 10px}
+.clear{background:none;border:0;color:var(--muted);font:inherit;font-size:14px;text-decoration:underline;padding:8px 4px}
+.res{font-family:"Barlow Condensed",sans-serif;font-size:20px;font-weight:600;margin-left:auto}
+.res{display:flex;flex-direction:column;align-items:flex-end;line-height:1.15}
+.res .ahead{color:var(--blue)}.res .band{color:var(--green)}.res .behind{color:var(--orange)}.res .boom{color:var(--red)}
+.plan+.plan{margin-top:-4px}
+.est{font-size:14px;margin:-4px 0 8px;color:var(--ink)}
+
+.seg{font-size:13px;color:var(--muted);margin-top:4px}
+.foot{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.foot button{background:none;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:10px 14px;font:inherit}
+.dl{margin-top:16px}
+.dl button{background:none;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:10px 14px;font:inherit}
+.dl .k{margin-top:6px}
+details{margin-top:16px;font-size:14px;color:var(--muted)}
+summary{cursor:pointer;color:var(--ink);font-weight:600}
+.band-print{display:none}
+.sdot{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);margin-left:auto;white-space:nowrap}
+.sdot[hidden]{display:none}
+.sdot i{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.sdot.ok i{background:var(--green)}.sdot.wait i{background:var(--amber)}
+.sdot.wait{color:var(--amber);font-weight:700}.sdot.wait i{width:10px;height:10px}
+.share{margin-top:16px}
+.share input{box-sizing:border-box;width:100%;max-width:100%;font:15px Barlow,sans-serif;color:var(--ink);background:var(--bg);border:2px solid var(--line);border-radius:8px;padding:8px 10px;margin:4px 0 8px}
+.share .srow{display:flex;gap:8px;flex-wrap:wrap}
+.share button,.share a{background:none;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:9px 12px;font:inherit;font-size:14px;text-decoration:none}
+.share a[hidden]{display:none}
+.share .k{margin-top:8px;white-space:normal!important;overflow:visible!important}
+@media print{
+  body{background:#fff;color:#000}.wrap>*:not(.band-print){display:none!important}
+  .band-print{display:block}
+  .band-print h2{font:700 16pt "Barlow Condensed",sans-serif;margin:0 0 4pt}
+  .band-print table{border-collapse:collapse;font:11pt "Barlow Condensed",sans-serif}
+  .band-print th,.band-print td{border:1px solid #000;padding:3pt 6pt;text-align:right}
+  .band-print th:first-child,.band-print td:first-child{text-align:left}
+}
+.hero{border-left:8px solid var(--line)}
+.hero.ahead{border-left-color:var(--blue)}.hero.band{border-left-color:var(--green)}.hero.behind{border-left-color:var(--orange)}.hero.boom{border-left-color:var(--red)}
+li.pt.ahead{border-left:6px solid var(--blue)}li.pt.band{border-left:6px solid var(--green)}li.pt.behind{border-left:6px solid var(--orange)}li.pt.boom{border-left:6px solid var(--red)}
+.hero{position:sticky;top:0;z-index:5;padding:10px 12px 10px;margin:0 -2px 12px;box-shadow:0 6px 14px -10px rgba(0,0,0,.35)}
+.top{display:flex;align-items:center;gap:12px}
+.delta{font-size:clamp(44px,13vw,60px)!important;flex:0 0 auto;min-width:2.2ch}
+.state{margin:0!important;font-size:15px!important;line-height:1.25}
+.grid{grid-template-columns:minmax(0,1.45fr) minmax(0,1fr) minmax(0,1fr)!important;gap:6px 10px!important;margin-top:8px;border-top:1px solid var(--line);padding-top:8px}
+.k{font-size:11.5px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.v{font-size:21px!important}
+.v small{display:block;margin-left:0!important;font-size:13px!important}
+.v{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:6px}.v small{flex-basis:100%}.pd{margin-left:0!important}
+@supports(padding:max(0px)){.hero{top:env(safe-area-inset-top,0px)}}
+@media (prefers-reduced-motion:no-preference){.delta{transition:color .3s}}
+.delta.over,.pd.over,.res .over{color:var(--yellow)}.hero.over{border-left-color:var(--yellow)}li.pt.over{border-left:6px solid var(--yellow)}
+.storewarn{background:var(--red);color:#fff;font-weight:600;border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:15px}.storewarn[hidden]{display:none}
+.rv{display:inline-flex;align-items:center;gap:3px;vertical-align:-2px;margin-right:6px;color:var(--ink);opacity:.8}.rv svg{width:16px;height:16px}.rv em{font-style:normal;font-size:11px;font-weight:600;border:1px solid var(--line);border-radius:6px;padding:0 4px;opacity:.9}
+li.wp{display:flex;gap:4px;align-items:flex-start;border:1px dashed var(--line);border-radius:12px;padding:8px 14px;margin:0 0 10px;font-size:14px;color:var(--ink)}li.wp.done{opacity:.55}li.wp small{display:block;color:var(--muted);font-size:12px}
+.prof{padding:6px 4px 4px;position:relative}
+.prof>svg{display:block;width:100%;height:auto;touch-action:pan-y;cursor:crosshair;-webkit-user-select:none;user-select:none}
+.ptip{position:absolute;top:2px;left:0;z-index:3;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:4px 9px;font-size:13px;line-height:1.35;white-space:nowrap;pointer-events:none;box-shadow:0 4px 12px -6px rgba(0,0,0,.45)}
+.ptip[hidden]{display:none}
+.pcap{font-size:12.5px;color:var(--muted);padding:2px 14px 0}
+.tools{display:flex;gap:8px;padding:8px 14px 12px;flex-wrap:wrap}
+.tools button{background:none;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:7px 12px;font:inherit;font-size:14px}
+.tools button.on{background:var(--ink);color:var(--card);border-color:var(--ink)}
+.pcard{background:var(--card);border:1px solid var(--line);border-radius:16px;margin:0 0 12px;padding:4px 0 2px}.pcard>summary{padding:8px 14px;font-weight:600;cursor:pointer}
+.rav{margin-top:8px;border-top:1px solid var(--line);padding-top:6px;display:grid;gap:3px}.ravl{font-size:13.5px;line-height:1.3;display:flex;align-items:flex-start}.ravl .rv{margin-top:1px}.ravl.none{color:var(--muted)}
+:root{--rest:#B9C3C9}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--rest:#5A2E26}}:root[data-theme="dark"]{--rest:#5A2E26}
+
+.stick{position:sticky;top:0;z-index:30;background:var(--bg);margin:-14px -14px 0;padding:calc(14px + env(safe-area-inset-top,0px)) 14px 2px;box-shadow:0 8px 14px -12px rgba(0,0,0,.45)}
+.stick .hero{position:static!important;box-shadow:none;margin-bottom:10px}
+.stick header{margin-bottom:8px}.stick .tabs{margin-bottom:8px}
+.stick .pcard{margin-bottom:8px}.stick .pcard>summary{padding:6px 14px}
+.stick .tools{padding:4px 14px 8px}
+.stick .pcap{display:none}
+.rv-l svg,.rv-c svg,.rv-b svg,.rv-w svg{box-sizing:content-box;border:1.5px solid currentColor;border-radius:50%;padding:2.5px;width:13px!important;height:13px!important}
+.rv-w svg{border-style:dashed}
+.grid{display:flex!important;flex-wrap:wrap;justify-content:space-between;align-items:baseline;column-gap:12px!important;row-gap:4px!important}
+.grid>div:nth-child(2){flex:1 1 100%;order:-1;margin-bottom:2px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--bg);border-radius:10px;padding:6px 10px}
+.grid>div:nth-child(2) .k{font-size:15px!important;font-weight:700;color:var(--ink);white-space:normal!important;overflow:visible!important;line-height:1.2}
+.grid>div:nth-child(2) .k::before{content:"Prochain point";display:block;font-size:11px;font-weight:500;color:var(--muted)}
+.grid>div:nth-child(2) .v{font-size:26px!important;justify-content:flex-end;text-align:right;flex:0 0 auto}
+.grid>div:nth-child(2) .v small{text-align:right}
+.grid>div:nth-child(1){flex:1 1 100%;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:0 10px}
+.grid>div:nth-child(1) .k{font-size:14px!important;font-weight:600;color:var(--ink);white-space:normal!important;overflow:visible!important;line-height:1.2}
+.grid>div:nth-child(1) .k i{display:block;white-space:nowrap;font-style:normal;font-weight:400;font-size:12px;color:var(--muted)}
+.grid>div:nth-child(1) .v{font-size:22px!important;justify-content:flex-end;text-align:right;flex:0 1 auto;min-width:0}
+.grid>div:nth-child(1) .v small{text-align:right}
+.grid>div:nth-child(1) .pd{font-size:18px}
+.grid>div:nth-child(2) .k i{display:block;font-style:normal;font-weight:500;font-size:12.5px;color:var(--muted);margin-top:1px}
+.rav:empty{display:none}
+.wpbar{flex:1 1 100%;order:-2;display:block;border:1.5px dashed var(--muted);border-radius:10px;padding:6px 10px;font-size:14px;line-height:1.25}
+.wpbar[hidden]{display:none!important}
+.wpbar .wrow{display:flex;align-items:center;gap:8px}
+.wpbar .wt{flex:1;min-width:0}.wpbar .wt small{display:block;color:var(--muted);font-size:12.5px}.wpbar .wt .wk{font-size:11px;font-weight:500}.wpbar .wt b{display:block;font-size:15px}
+li.wp button.wpok{display:block;background:var(--btn);color:var(--btnink);border:0;border-radius:8px;padding:10px 14px;font:600 16px Barlow,sans-serif;min-height:44px;margin-top:6px}
+li.wp>span:not(.rv){flex:1;min-width:0}
+li.wp .clear{padding:0 2px;font-size:12px}
+.grid>div:nth-child(2) .k::before{content:none!important}
+.grid>div:nth-child(2){flex-wrap:wrap;row-gap:0!important}
+.lb{display:block;font-size:11.5px;font-weight:500;color:var(--muted)}.lb .dn{font-weight:700;color:var(--ink);white-space:nowrap}
+.grid>div:nth-child(2)>.lb{flex:1 1 100%;margin-bottom:-2px}
+.grid>div:nth-child(2) .k{flex:1 1 0;min-width:0}
+.wpbar.m{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;column-gap:10px;padding:5px 10px}.wpbar.m>.lb{flex:1 1 100%;margin-bottom:-2px}
+.wpbar .lf{min-width:0;line-height:1.25}.wpbar .lf .lb{display:block;font-size:11.5px;color:var(--muted)}.wpbar .lf .lb .dn{font-weight:700;color:var(--ink);white-space:nowrap}.wpbar .lf b{font-size:15px}
+.wpbar .vv{font-family:"Barlow Condensed",sans-serif;font-size:21px;font-weight:600;line-height:1.05;text-align:right;flex:0 0 auto}
+.wpbar .vv small{display:block;font:500 13px Barlow,sans-serif;color:var(--muted)}
+/* infos tronçon dans le profil */
+.pinf{font-weight:500;color:var(--muted);font-size:13px;margin-left:6px}
+.pinf .fac{font-size:inherit}
+/* cartes de la liste */
+li.pt details.more{margin:2px 0 6px;font-size:14px;color:var(--muted)}
+li.pt details.more>summary{font-weight:500;color:var(--muted);font-size:13.5px;padding:2px 0;list-style:none;cursor:pointer}
+li.pt details.more>summary::-webkit-details-marker{display:none}
+li.pt details.more>summary::before{content:"▸ ";}li.pt details.more[open]>summary::before{content:"▾ ";}
+li.pt details.more .plan,li.pt details.more .est{margin:2px 0 6px}
+.brief{font-size:14px;color:var(--muted);margin:2px 0 6px}.brief b{color:var(--ink);font-weight:600}
+.pinf .fac.hard,.pinf .fac.easy{font-weight:600}
+.dv-o,.plan b.dv-o{color:var(--orange);font-weight:700}.dv-r,.plan b.dv-r{color:var(--red);font-weight:700}
+body.typing .stick,.stick.loose{position:relative}
+.brand .bt{display:flex;flex-direction:column;line-height:1.05;min-width:0}.brand .bt small{font:500 13px Barlow,sans-serif;color:var(--muted);margin-top:2px}
+.wpwarn{display:block;color:var(--red);font-weight:600;font-size:13.5px;margin-top:6px}
+.grid>div:nth-child(2),#wpBar{cursor:pointer;-webkit-tap-highlight-color:transparent;transition:box-shadow .2s}
+.grid>div:nth-child(2).flash,#wpBar.flash{box-shadow:0 0 0 2px var(--ink)}
+.share button.reset{color:var(--red);border-color:var(--red)}.share button.reset.armed{background:var(--red);color:#fff;font-weight:600}
+.trp{display:inline-block;font:600 12.5px Barlow,sans-serif;border-radius:999px;padding:1px 8px;margin-top:3px;color:#fff;white-space:nowrap}
+.trp.tr-up{background:var(--blue)}.trp.tr-eq{background:var(--green)}.trp.tr-dn{background:var(--orange)}.trp.tr-dd{background:var(--red)}
+.toast{position:fixed;left:12px;right:12px;top:calc(10px + env(safe-area-inset-top,0px));z-index:60;background:var(--ink);color:var(--card);border-radius:14px;padding:10px 14px;font:600 15px Barlow,sans-serif;box-shadow:0 6px 20px rgba(0,0,0,.28);display:flex;flex-wrap:wrap;align-items:center;gap:3px 8px}
+.toast[hidden]{display:none}.toast b{font-weight:700;flex-basis:100%}.toast .trp{margin:0}
+.brief .trp{margin:0 0 0 8px;vertical-align:1px;font-size:12px}
+#rythme[hidden]{display:none!important}#rythme b{color:var(--ink);font-weight:600}
+#state .pc{font-weight:500;color:var(--muted);white-space:nowrap}
+li.pt .entry>details.more{margin:0;order:5;align-self:center;font-size:14px}
+li.pt .entry>details.more>summary{padding:6px 0}
+li.pt:not(.done) .entry>details.more{margin-left:auto}
+li.pt .entry>.res{order:6}
+li.pt .entry>details.more[open]{flex-basis:100%}
+li.pt .entry>details.more[open]>.plan:first-of-type{margin-top:4px}
+li.wp small:empty{display:none}
+/* alignement icône / texte */
+.ravl .rv{margin-top:-1.5px;position:relative;top:-1.5px}
+li.wp>.rv,li.wp>svg{position:relative;top:0}
+#rav.rav{gap:6px}
+.rv.rv-l,.rv.rv-c,.rv.rv-b,.rv.rv-w{vertical-align:-4px}
+/* lisibilité en course : petits textes agrandis */
+#hero .lb{font-size:13px!important}
+#hero .grid>div:nth-child(1) .k i{font-size:13.5px!important}
+#rythme{color:var(--ink)!important}#rythme b{font-size:15px}
+.ravl{font-size:14.5px!important}.ravl .rv{top:1px!important}
+li.pt .brief .trp{font-size:13.5px!important;padding:1px 9px}
+/* lisibilité en course : heures agrandies, interligne resserré (hauteur du bandeau quasi inchangée) */
+.grid>div:nth-child(1) .v{font-size:26px!important;line-height:.95}.grid>div:nth-child(1) .v small{line-height:1.05}
+.grid>div:nth-child(2) .v{font-size:30px!important;line-height:.95}.grid>div:nth-child(2) .v small{line-height:1.1}
+.wpbar .vv{font-size:25px!important;line-height:.95}.wpbar .vv small{line-height:1.1}
+/* tailles harmonisées bandeau / cartes : noms 17 px, libellés 14 px */
+.grid>div:nth-child(2) .k{font-size:17px!important}.wpbar .lf b{font-size:17px!important}#hero .lb{font-size:14px!important}
+.ambw{display:flex;flex-direction:column;gap:8px;background:#B85C00!important}
+.ambw[hidden]{display:none}
+.ambw .ambb{display:flex;gap:8px;flex-wrap:wrap}
+.ambw button{font:600 14px Barlow,sans-serif;border-radius:10px;padding:9px 12px;border:1.5px solid var(--ink);background:var(--card);color:var(--ink)}
+.ambw button.ambr{background:var(--ink);color:var(--card)}
+.themeb{background:none;border:0;padding:6px;margin:-6px;border-radius:10px;line-height:0;cursor:pointer;color:inherit;-webkit-tap-highlight-color:transparent}
+.themeb:active{background:var(--line)}
+.v:has(>.pre),.wpbar .vv:has(>.pre),.v:has(>.cd),.wpbar .vv:has(>.cd){display:flex!important;flex-direction:column;align-items:flex-end;flex-wrap:nowrap}
+.v small.pre,.wpbar .vv small.pre{display:block;flex-basis:auto!important;white-space:nowrap;font:500 13px Barlow,sans-serif!important;color:var(--muted);text-align:right;line-height:1.15!important;margin:0 0 1px}
+.cd{white-space:nowrap}.cd i{font:500 14px Barlow,sans-serif;font-style:normal;color:var(--muted);margin-right:4px}
+#projLbl b{font-weight:700;color:var(--ink)}#projLbl .pd{font-size:inherit!important;margin-left:2px}
+.gpsm{display:flex;flex-direction:column;gap:8px;background:var(--blue);color:#fff;font-weight:600;border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:15px}
+.gpsm[hidden]{display:none}
+.gpsm .ambb{display:flex;gap:8px;flex-wrap:wrap}
+.gpsm button{font:600 14px Barlow,sans-serif;border-radius:10px;padding:9px 12px;border:1.5px solid #fff;background:transparent;color:#fff}
+.gpsm button.ambr{background:#fff;color:#0B3D7A}
+#state{flex:1;min-width:0}
+.st2{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.stl{display:flex;flex-direction:column;line-height:1.2;min-width:0;white-space:nowrap}.stl small{font:500 13px Barlow,sans-serif;color:var(--muted);margin-top:3px}
+.st2 .now{flex:0 0 auto;white-space:nowrap;padding:10px 12px}.st2 .clear{flex:0 0 auto}
+.stw{display:block;margin-bottom:6px;font-size:14px}
+</style>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#13202B">
+<link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png">
+<script>/* Version en ligne (https) : gardée sur le téléphone pour marcher sans réseau, avec le GPS. */
+if("serviceWorker" in navigator&&(location.protocol==="https:"||location.hostname==="localhost"))addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
+</head>
+<body>
+<div class="wrap">
+  <div class="stick" id="stick">
+  <header>
+    <div class="brand"><button type="button" class="themeb" id="themeBtn" aria-label="Changer de mode : jour ou nuit"><svg class="logo" viewBox="0 0 28 28" aria-hidden="true"><circle cx="17.5" cy="4.5" r="2.6" fill="var(--ink)"/><path d="M15.5 8.5 L11 13 L7 12.5 M15.5 8.5 L18 15 L22.5 17 M15.5 8.5 L20 11.5 L23 10 M18 15 L14 19 L12.5 25 M17.8 15.2 L21 20 L20 25" fill="none" stroke="var(--ink)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 26 L9 21 L13 23 L19 18 L26 26 Z" fill="var(--red)" opacity=".85"/></svg></button><span class="bt"><span id="brandName">Suivi de course</span><small id="brandDep"></small></span></div>
+    <span class="sdot" id="sdot" hidden><i></i><b id="sdotTxt"></b></span>
+  </header>
+
+  <div class="tabs" id="tabs" role="group" aria-label="Choisir la course"></div>
+
+  <div class="storewarn" id="storeWarn" hidden>Ce navigateur bloque l'enregistrement : les temps saisis ne seront pas gardés. Ouvre ce fichier dans ton navigateur habituel, hors navigation privée.</div>
+  <div class="storewarn ambw" id="ambWarn" hidden><span id="ambTxt"></span><span class="ambb"><button type="button" class="ambr" id="ambReset">Remettre à zéro (conseillé)</button><button type="button" id="ambKeep">Garder les temps</button></span></div>
+  <div class="gpsm" id="gpsMiss" hidden><span id="gpsMissTxt"></span><span class="ambb"><button type="button" class="ambr" id="gpsMissOk">Saisir</button><button type="button" id="gpsMissGo">Modifier</button><button type="button" id="gpsMissNo">Ignorer</button></span></div>
+  <section class="hero" id="hero" aria-live="polite">
+    <div class="top"><div class="delta num" id="delta">–</div><div class="state" id="state">Entre ton temps de course au premier point.</div></div>
+    <div class="grid">
+      <div><div class="k"><span id="projLbl">Arrivée estimée</span><i>objectif <span id="goal">–</span></i><i id="rythme" hidden>à ce rythme <b id="rythmeT"></b></i></div><div class="v" id="projT">–</div></div>
+      <div><div class="lb" id="nextTop"></div><div class="k" id="nextLbl">Prochain point</div><div class="v" id="nextH">–</div></div>
+      <div class="wpbar" id="wpBar" hidden></div>
+    </div>
+    <div class="rav" id="rav"></div>
+  </section>
+  <details class="pcard" id="profCard" open><summary>Profil<span class="pinf" id="pinf"></span></summary>
+    <div class="prof" id="prof"></div>
+    <div class="tools"><button type="button" id="pzAll">Toute la course</button><button type="button" id="pzSeg" class="on">Zoom section en cours</button></div>
+  </details>
+  </div>
+
+  <div class="start" hidden>
+    <label for="start">Heure de départ <span class="k" id="startHint">(déduite au 1er pointage)</span></label>
+    <input type="time" id="start">
+  </div>
+
+  <ol id="list"></ol>
+
+  <div class="dl"><button type="button" id="dl">Télécharger cette course (hors ligne)</button><div class="k" id="dlMsg" role="status"></div></div>
+  <details class="share" id="shareBox">
+    <summary>Partage en direct</summary>
+    <p>Colle ici l'adresse de ton script Google (elle se termine par /exec). Chaque temps validé, modifié ou effacé est alors envoyé à la page spectateur. Sans réseau, les temps sont gardés et renvoyés automatiquement dès que le réseau revient. Une course terminée reste affichée aux spectateurs jusqu'à ce que tu en affiches une autre avec le bouton ci-dessous, ou au plus tard 3 jours avant la course suivante. « Remettre … à zéro » (trois appuis) efface tous les temps de la course affichée sur ce téléphone et chez les spectateurs : pratique pour nettoyer tes tests avant le départ.</p>
+    <input type="url" id="shareUrl" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off" spellcheck="false" aria-label="Adresse du script Google">
+    <div class="srow"><button type="button" id="shareSave">Enregistrer</button><button type="button" id="shareTest">Tester la liaison</button><button type="button" id="shareShow">Afficher cette course aux spectateurs</button><button type="button" id="raceReset" class="reset">Remettre cette course à zéro</button><a id="shareView" target="_blank" rel="noopener" hidden>Ouvrir la page spectateur</a></div>
+    <div class="k" id="shareMsg" role="status"></div>
+  </details>
+  <details>
+    <summary>Comment l'arrivée est projetée</summary>
+    <p>« À ce rythme » (sous l'objectif) : ton temps final si tu gardes jusqu'au bout ton écart actuel au plan, en pourcentage. L'arrivée estimée y converge au fil de la course ; le chiffre est masqué quand les deux sont à moins de 5 min.</p>
+    <p>Le plan contient déjà ta dégradation habituelle en fin de course. La projection combine les minutes déjà gagnées ou perdues et ton rythme par rapport au plan. Ce rythme tient compte à la fois de ton écart cumulé et de la dernière section : si tu récupères du retard, la projection s'améliore ; si tu en perds de plus en plus, elle se dégrade. En début de course, elle garde surtout les minutes (un écart précoce est souvent dû au départ ou au peloton) ; plus tu avances, plus le rythme compte. Une avance ne compte qu'à moitié dans le rythme, parce qu'une avance prise tôt se paie souvent en fin de course.</p>
+    <p>Entre deux pointages, quand le GPS du téléphone donne une position de moins de 5 min, précise et à moins de 60 m de la trace, l'arrivée estimée est recalculée depuis cette position, avec le même calcul que la montre. La mention « GPS » et l'heure de la position l'indiquent. Sinon, l'arrivée reste calculée depuis le dernier pointage. Avant le premier pointage, le calcul part de l'heure de départ théorique. Si le départ est décalé, corrige l'heure dans « Heure de départ » ou appuie sur « Je pars » au coup de pistolet. Au premier pointage saisi avec le temps de ta montre, l'heure de départ est recalée dessus. Un pointage suggéré par le GPS et accepté tel quel garde l'heure de départ en cours, puisqu'il est calculé à partir d'elle. Le GPS ne fonctionne que page ouverte.</p>
+    <p>Saisie : tape le temps de course affiché sur ta montre, par exemple 152 pour 1h52 ou 1452 pour 14h52. L'heure de départ, qui sert seulement à afficher les heures de passage, est déduite de l'heure du téléphone lors de la première saisie : un départ retardé est ainsi pris en compte automatiquement. Fais cette première saisie au moment où tu passes au point.</p>
+    <p>« Estimé » : ce que tu devrais mettre sur la section et le temps de course attendu à ce point, compte tenu de ton avance ou de ton retard actuel.</p>
+    <p>Dénivelé de la section en orange à partir de 50 m/km de pente moyenne, en rouge à partir de 75 m/km (montée et descente séparément). « Terrain » : difficulté de la section mesurée sur les temps réels d'autres coureurs, par rapport à ce que prévoit la pente seule (×1.17 = 17 % plus lent que prévu). </p>
+    <p>Icônes devant le nom des points : chronomètre = pointage seul, goutte = ravito liquide, couverts = ravito complet, maison = base de vie (repas chaud, change de vêtements), drapeau à damier = arrivée. Point d'eau (goutte entourée de pointillés) : pas de pointage officiel ; il s'affiche en haut quand c'est le prochain passage, et « Valider le passage » dans la liste fait passer ton suivi au pointage suivant et recale ta position estimée et l'heure prévue au prochain pointage sur ce passage (rien n'est envoyé aux spectateurs ; l'arrivée estimée reste calculée sur les pointages officiels). Un passage validé bien avant l'heure estimée demande une confirmation. Sans validation, il disparaît tout seul 10 min après l'heure estimée. Un appui sur le bandeau du prochain point (ou du point d'eau) recalcule tout à l'heure actuelle et ramène la liste dessus ; c'est aussi fait automatiquement quand tu rallumes l'écran, et la liste revient alors sur le prochain point.</p>
+    <p>« Course » et « Section » sont comparés au plan. La pastille de tendance (au bout de la ligne « Cible ») compare la section à ton allure moyenne depuis le départ (connue au pointage précédent) : ▲ accélère (plus de 5 % plus rapide), = allure tenue (à ±5 %), ▼ ralentit (5 à 10 % plus lent), ▼▼ ralentit fort (plus de 10 % plus lent). Pas de pastille sur la première section ni sur les sections de moins de 10 min.</p>
+    <p>Bleu : plus rapide que le bas de la fourchette (plus de 5 % d'avance). Vert : entre le bas de la fourchette et le plan. Jaune : au-dessus du plan mais dans la fourchette (jusqu'à +5 %). Orange : hors fourchette, de 5 à 10 % de retard. Rouge : plus de 10 % de retard. Les passages restent enregistrés sur ce téléphone, même si tu fermes la page. Un temps validé est verrouillé : appuie sur « Modifier » pour le corriger, puis confirme le remplacement (second appui). Sans nouvelle saisie validée, il se reverrouille tout seul au bout de 4 secondes avec l'ancienne valeur. Un temps plus rapide que le vainqueur de l'édition précédente à ce point est refusé. Un temps très lent (plus de 120 % du plan en début de course, environ 145 % sur la fin d'un ultra) demande une confirmation : appuie une seconde fois sur Valider, pour éviter les fautes de frappe.</p>
+  </details>
+
+  <div class="band-print" id="band"></div>
+</div>
+
+<script id="app">
+const BODY0=document.querySelector(".wrap").outerHTML, STYLE0=(document.getElementById("appstyle")||document.querySelector("style")).outerHTML, SRC0=document.getElementById("app").textContent;
+/*R*/const RACES={
+  black:{name:"Black Race",sub:"6 mars",date:"2027-03-06",start:"07:00",pts:[["Départ Saint-Amans-Soult", 0, 0, 0, 0], ["Cabane des Chasseurs (P1)", 16.3, 114, 1070, 835, 0.98, 92, "c"], ["Vide Tripes (P2)", 20.5, 148, 1450, 905, 1.05, 119, "p"], ["Clamoux (P3)", 24.9, 188, 1870, 995, 1.04, 151, "p"], ["Pradelles (P4)", 31.1, 226, 1935, 1400, 1.03, 180, "c"], ["Portail de Nore (P5)", 36.6, 274, 2375, 1480, 1.09, 218, "c"], ["Arrivée", 44.2, 312, 2375, 2375, 0.88, 245]]},
+  aubrac:{name:"Trans Aubrac",sub:"17 avril",date:"2027-04-17",start:"09:32",pts:[
+    ["Départ Laguiole",0,0,0,0],["Buron de la Paouade",13.2,79,505,145,0.93,67,"p"],["Saint-Chély-d'Aubrac",30.8,188,900,1055,0.98,157,"c"],["Buron des Bouals",44.2,312,1615,1245,1.23,256,"c"],["Cascade de Lacessat",56.2,392,1790,1695,1.01,320,"p"],["St-Martin-de-Montbon",66.5,465,2130,2435,0.91,390,"p"],["Arrivée St-Geniez",74.7,516,2255,2830,0.94,442]],
+    wp:[["Buron des Enguilhems",22,"Point d'eau"],["Chapelle d'Aurelle",63,"Point d'eau naturel"]]},
+  utpma:{name:"UTPMA",sub:"11–12 juin",date:"2027-06-11",start:"23:00",pts:[
+    ["Départ Aurillac",0,0,0,0],["Lavernière Velzic",16.9,103,605,510,0.88,84,"c"],["Thiézac",35.7,252,1490,1295,1.02,196,"c"],["Super Lioran",55.5,442,2730,2070,1.07,347,"b"],["Pas de Peyrol",67.1,574,3625,2615,1.09,445,"c"],
+    ["Mandailles",76.0,664,3940,3610,1.12,508,"c"],["Lascelles",91.9,824,4665,4525,1.04,623,"c"],["St-Simon",103.9,921,4930,4865,0.91,684,"c"],["Arrivée Aurillac",114.1,999,5155,5155,0.85,732]]}
+};/*/R*/
+/*S*/const SHARE_DEFAULT="";/*/S*/
+const RV={p:["Pointage",'<svg viewBox="0 0 16 16"><circle cx="8" cy="9.2" r="5.3" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 9.2V6.4M6.3 2h3.4M12.3 4.6l1-1" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>'],
+  l:["Ravito liquide",'<svg viewBox="0 0 16 16"><path d="M8 1.6C8 1.6 3.2 7.3 3.2 10.3a4.8 4.8 0 0 0 9.6 0C12.8 7.3 8 1.6 8 1.6Z" fill="currentColor"/></svg>'],
+  c:["Ravito complet",'<svg viewBox="0 0 16 16"><path d="M4.2 1.5v4.4a1.5 1.5 0 0 0 1 1.4v7.2M2.8 1.5V5M5.6 1.5V5M11.6 14.5V1.5C9.8 2.3 9 4.4 9 6.6c0 1 .6 1.6 1.4 1.6h1.2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>']};
+RV.s=["Départ",'<svg viewBox="0 0 16 16"><path d="M4 14.6V1.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M4.6 2.2h8.2l-2 3 2 3H4.6Z" fill="currentColor"/></svg>'];
+RV.f=["Arrivée",'<svg viewBox="0 0 16 16"><path d="M3.4 14.6V1.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><rect x="4" y="2" width="9.6" height="6.6" fill="none" stroke="currentColor" stroke-width="1.1"/><path d="M4 2h3.2v3.3H4zM10.4 2h3.2v3.3h-3.2zM7.2 5.3h3.2v3.3H7.2z" fill="currentColor"/></svg>'];
+RV.w=["Point d'eau",RV.l[1]];
+RV.b=["Base de vie : repas chaud, change de vêtements",'<svg viewBox="0 0 16 16"><path d="M1.8 7.6 8 2.2l6.2 5.4M3.6 6.3v7.7h8.8V6.3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M6.3 14v-3.6h3.4V14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>'];
+function rvIcon(t){const r=RV[t];return r?'<span class="rv rv-'+t+'" title="'+r[0]+'" role="img" aria-label="'+r[0]+'">'+r[1]+(t==="b"?'<em>base de vie</em>':'')+'</span>':"";}
+
+const SHARE_KEY="3vjggbozZeYyCyp1EU4dlO-T";
+const $=id=>document.getElementById(id);
+const store={get(k,d){try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v);}catch(e){return d;}},
+             set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true;}catch(e){return false;}}};
+// Le navigateur bloque-t-il l'enregistrement (navigation privée stricte, stockage désactivé) ?
+const STORE_OK=(()=>{try{localStorage.setItem("__t","1");const ok=localStorage.getItem("__t")==="1";localStorage.removeItem("__t");return ok;}catch(e){return false;}})();
+if(!STORE_OK)document.getElementById("storeWarn").hidden=false;
+const KEYS=Object.keys(RACES);let cur=store.get("race",KEYS[0]);if(!RACES[cur])cur=KEYS[0];
+// Liste des points modifiée entre deux versions : les temps enregistrés sont repris par nom de point (sinon un temps glisserait sur le point voisin).
+// Trans Aubrac : Prefinish R3 retiré le 11/10/2026 ; une course de test commencée avant reprend l'ancienne liste.
+const AMB=new Set();const isAmb=k=>AMB.has(k)||!!store.get("amb_"+k,false);
+(function(){const LEG={aubrac:{before:Date.UTC(2026,9,11,19,30),from:3,names:["Départ Laguiole","Buron de la Paouade","Saint-Chély-d'Aubrac","Prefinish R3","Buron des Bouals","Cascade de Lacessat","St-Martin-de-Montbon","Arrivée St-Geniez"]}};
+  KEYS.forEach(k=>{const N=RACES[k].pts.map(p=>p[0]),s=store.get("st2_"+k,null);let prev=store.get("lay_"+k,null);
+    if(s&&s.e&&Object.keys(s.e).length){
+      if(!prev&&LEG[k]){const ks=Object.keys(s.e).map(Number);
+        if((s.t0&&s.t0<LEG[k].before)||ks.some(i=>i>=N.length))prev=LEG[k].names;
+        // Origine inconnue (ni heure de départ réelle, ni ancien dernier numéro) : on ne devine pas, on demande (avertissement, envois bloqués).
+        else if(!s.t0&&ks.some(i=>i>=LEG[k].from)){AMB.add(k);store.set("amb_"+k,true);return;}}
+      if(prev&&prev.join("|")!==N.join("|")){const e={};Object.keys(s.e).forEach(i=>{const j=N.indexOf(prev[+i]);if(j>0)e[j]=s.e[i];});
+        const ks=Object.keys(e).map(Number).sort((a,b)=>a-b);if(ks.every((j,n)=>!n||e[j]>e[ks[n-1]])){s.e=e;store.set("st2_"+k,s);setTimeout(()=>queueShare(k),0);}}}
+    store.set("lay_"+k,N);});})();
+const toMin=s=>{if(!s)return null;const [h,m]=s.split(":").map(Number);return h*60+m;};
+const hm=m=>{m=Math.round(m);const s=m<0?"-":"";m=Math.abs(m);return s+Math.floor(m/60)+"h"+String(m%60).padStart(2,"0");};
+const clock=m=>{m=((Math.round(m)%1440)+1440)%1440;return String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0");};
+const dmin=d=>{d=Math.round(d);return (d>0?"+":d<0?"−":"±")+Math.abs(d)+" min";};
+function parseEl(v){if(/-/.test(v||""))return NaN;const d=(v||"").replace(/\D/g,"");if(!d)return null;
+  const m=parseInt(d.slice(-2),10),h=d.length>2?parseInt(d.slice(0,-2),10):0;if(m>59)return NaN;return h*60+m;}
+function state(){const s=store.get("st2_"+cur,null);return s||{start:RACES[cur].start,startSet:false,e:{}};}
+function save(s){const ok=store.set("st2_"+cur,s);queueShare(cur);return ok;}
+function clsT(a,p){a=Math.round(a);return a<Math.round(p*.95)?"ahead":a<=Math.round(p)?"band":a<=Math.round(p*1.05)?"over":a<=Math.round(p*1.10)?"behind":"boom";}
+
+/* ---------- profil et ravitos (repris de la page spectateur, sans la carte) ---------- */
+const TRK={"black":{"d":[0,2,20,35,58,75,100,110,122,138,145,148,158,168,178,190,212,235,248,252,268,272,288,295,300,312,332,342,358,365,378,382,388,398,405,420,425,435,458,470,482,488,505,515,522,528,530,548,560,570,580,595,615,638,668,678,692,708,718,728,742,758,762,775,780,782,790,795,810,818,822,835,860,868,875,890,898,905,918,925,928,935,942,952,962,975,988,995,1002,1010,1022,1045,1052,1072,1080,1090,1100,1108,1112,1128,1135,1150,1165,1180,1190,1200,1228,1235,1240,1252,1258,1265,1280,1285,1292,1300,1312,1320,1328,1332,1335,1342,1348,1362,1370,1378,1388,1395,1405,1410,1425,1438,1445,1448,1452,1460,1468,1478,1485,1495,1510,1520,1530,1535,1548,1558,1565,1578,1588,1615,1622,1625,1630,1640,1655,1665,1670,1678,1685,1695,1702,1720,1730,1742,1752,1765,1772,1785,1795,1802,1812,1822,1828,1835,1842,1848,1860,1870,1878,1898,1910,1915,1928,1948,1958,1968,1982,1998,2012,2028,2045,2050,2062,2065,2070,2075,2082,2105,2115,2120,2130,2148,2150,2168,2172,2178,2190,2200,2205,2215,2220,2228,2250,2258,2265,2275,2288,2298,2300,2308,2312,2335,2342,2352,2372,2390,2402,2415,2430,2452,2478,2490,2512,2518,2525,2538,2555,2565,2572,2578,2592,2608,2612,2618,2625,2632,2640,2655,2668,2680,2685,2705,2725,2730,2735,2765,2778,2808,2822,2828,2835,2838,2842,2850,2860,2872,2878,2918,2920,2925,2940,2948,2955,2970,2972,2995,3012,3020,3060,3065,3080,3088,3095,3102,3110,3125,3138,3145,3158,3165,3182,3195,3205,3215,3235,3252,3262,3285,3300,3312,3320,3338,3350,3360,3368,3378,3392,3405,3418,3425,3432,3450,3482,3512,3525,3535,3540,3565,3585,3592,3600,3615,3640,3660,3672,3680,3695,3710,3732,3770,3782,3788,3790,3798,3810,3818,3830,3840,3855,3872,3878,3885,3895,3905,3922,3935,3945,3962,3972,3988,3998,4008,4020,4028,4035,4045,4050,4065,4095,4098,4102,4108,4118,4122,4130,4152,4162,4168,4172,4188,4205,4212,4230,4240,4250,4265,4295,4312,4330,4365,4380,4392,4418,4420],"z":[269,270,274,280,292,304,331,336,345,355,362,364,374,381,392,410,465,507,526,534,560,569,593,606,615,631,621,615,606,604,592,586,582,578,575,563,559,552,534,524,514,510,500,496,489,481,476,440,418,404,388,372,368,368,369,367,363,344,334,335,346,352,351,340,339,338,341,344,347,349,351,363,392,402,411,423,439,468,520,546,554,578,601,625,640,653,676,683,685,685,686,699,702,703,698,683,665,653,647,641,643,659,681,699,722,742,804,814,823,857,862,855,838,833,829,825,813,805,792,784,781,768,757,717,701,694,682,658,618,604,572,549,533,529,522,514,507,493,479,462,442,425,414,415,428,434,431,423,427,458,466,469,479,494,502,506,511,524,541,558,573,599,610,631,645,670,684,714,728,732,739,753,763,781,801,811,824,838,845,854,861,864,869,865,863,857,843,829,817,809,798,802,831,837,848,860,878,960,999,1012,1027,1034,1034,1029,1031,1036,1053,1060,1060,1052,1046,1037,1019,1015,1011,1005,998,991,990,989,991,991,991,994,1017,1018,1016,1027,1046,1094,1126,1125,1108,1106,1103,1095,1085,1080,1076,1074,1070,1066,1065,1067,1071,1076,1081,1090,1096,1102,1103,1107,1110,1111,1112,1115,1105,1063,1056,1056,1053,1051,1044,1030,1010,985,973,879,875,866,839,827,819,809,808,811,808,806,780,779,778,781,788,791,790,791,799,804,817,822,834,835,835,836,837,838,843,881,899,922,939,974,995,1010,1014,1018,1042,1061,1077,1084,1089,1113,1142,1202,1206,1198,1194,1173,1149,1144,1143,1145,1154,1149,1139,1130,1119,1108,1087,1042,1029,1023,1019,1008,997,990,978,966,948,933,928,919,908,899,881,872,861,835,816,807,789,764,737,720,704,688,682,667,637,634,627,618,600,590,576,538,513,498,482,432,390,383,375,364,355,344,323,304,292,275,270,269,269,269],"t":[0,1,12,21,36,48,69,76,84,95,101,103,110,117,126,139,165,190,203,208,223,228,244,251,256,264,276,280,288,291,297,299,302,306,310,317,319,324,334,340,346,348,356,361,365,367,369,378,385,390,395,402,412,424,440,445,452,459,464,469,480,489,491,497,500,502,506,509,518,522,525,535,555,562,568,582,589,602,628,644,648,660,671,685,694,705,716,723,728,732,739,754,759,769,773,778,783,786,789,796,802,812,825,840,851,863,897,906,912,925,928,931,939,941,944,948,954,957,961,964,965,969,972,980,985,989,995,999,1005,1008,1017,1024,1028,1030,1032,1036,1039,1044,1048,1053,1061,1066,1072,1075,1083,1089,1092,1099,1106,1128,1134,1136,1140,1149,1161,1169,1173,1179,1188,1200,1208,1225,1235,1247,1257,1271,1280,1293,1304,1311,1319,1328,1333,1343,1352,1359,1371,1379,1385,1399,1407,1411,1419,1429,1434,1439,1447,1454,1461,1468,1477,1480,1498,1502,1509,1516,1531,1574,1594,1603,1617,1630,1632,1642,1645,1649,1660,1670,1672,1677,1680,1684,1696,1700,1704,1710,1716,1722,1723,1728,1731,1745,1749,1756,1774,1785,1793,1804,1819,1849,1873,1880,1893,1895,1899,1906,1916,1921,1925,1928,1937,1946,1949,1952,1957,1963,1969,1980,1990,1999,2002,2015,2028,2031,2035,2053,2060,2077,2085,2088,2092,2093,2096,2100,2107,2115,2118,2144,2146,2149,2158,2163,2167,2175,2176,2190,2200,2205,2227,2229,2239,2245,2250,2256,2260,2269,2280,2286,2297,2304,2318,2327,2333,2340,2353,2365,2374,2397,2413,2431,2441,2464,2480,2489,2496,2505,2522,2536,2548,2556,2563,2581,2613,2646,2659,2664,2667,2681,2692,2696,2700,2711,2728,2740,2746,2749,2756,2764,2774,2792,2798,2801,2802,2806,2812,2815,2821,2826,2833,2841,2844,2847,2852,2857,2865,2871,2876,2885,2890,2897,2902,2908,2915,2919,2923,2929,2931,2939,2953,2954,2956,2959,2965,2967,2971,2983,2990,2993,2996,3006,3016,3020,3028,3032,3037,3044,3058,3066,3075,3092,3099,3106,3119,3120],"cp":[0,152,191,231,284,323,383],"pl":"{ckhGajdNAz@iExHrBnIhFdMzBjKhGdN~CjBbDpEdGnA`BzBBz@`D`AhDoAnDj@|E]~J_DhKOnEt@s@nAxF`@o@`AvFjCxAsBnA`@hDkAqGjHaDiAcGZ}Bo@mErA{@nAKtB}CfBcCPaEtFc@fBaDfBeKjBwEi@uCdFQtBxEbHmBxDmBhBIfBYLuHs@uE}AkD_@qD^gFu@|HuEjA{OhFwSXqFc@kJ{AwI`@iFzChBjEdFbGfAfA}@kBgGDyBTo@~B_@x@{A|@aJSuDx@e@dBsG~G_MxB_A`Bj@tF{AxBaAtBh@bD~Ct@vCQp@`B~A`AvCvCl@nDTpDoCdDpC`Cj@`Cd@`Ci@vDqCpHaJbCU~HyDxB{@}@wEgCuC}BaA{@yAcBwIWaD~Fp@nFu@tD_FdCs@nC_CfLF~Bi@vA^`EdCr@_BzB?dFxDtAHlBbBI{C}B{FFwDaAuCVaBLJaAqCy@_BkDgDyBiA{BgAcBgE{@}BiDRoAr@cGT{Ec@jAjBg@XsAOkAsCgBoAmD\\mBbBsBvDyElE}CyAgD@gAgAm@aHqA{EOgDeCuFq@iFtFkOJgC`@a@fA~@h@jEOrIh@fFo@zAnA~BRvDtBvCdCMlGwEdDk@fD_DbD}AlDaDbCFdExBlCjC~Bq@nDRnDc@rA_@|@{A~Ba@jA|@ChHR`E|@iCnC}L_BmGAwBtEg@fI}D`BmE~@eF`D{GhGv@~E`DfG~@zFrFKdBiBxEDr@eAp@ArAmAzAqCbLmCjCYrBbCdDdGbFLv@I|Km@fBCtBoA|FiAzEYlBT~E~@d@hArCtDhMtBy@nB~APrFhA`H`ChCFz@cA|CRpBpGgI`@mD~AiELvMsD~GyC|C_AbHsChHnJjE|KoEjCeFjF_MrAa@bCf@`DpErCtJnDMxBjAj@jBj@`JxFvB`ArAArBwAdCpBnAtAlClF~C~CeExE}@pAh@vBjM_AnMlAt@RtBuBpUr@fHdLjMpEfFjAR~@vC`@QPgB|BCfBxDx@xGjAb@rNnTf@YlAn@fA~IvAhCNvC~F{A\\XEvOnHcBbCHvQlO`@pBLpJDxDh@bDoBfB_Cn@mFuC{EHqAiCuEq@{AaCuCwJkBkG_@eFuAsEmIeDiHu@yCeByH_HiFaD{EUeBsBDoKuCyEoAuEeA{CkCkCsAaHiCeFaEx@OtDy@vC{@wKfDeVuNrC}EQ}@uE_AqAwKcGyHmFoAqC_Ce@oFcDyLaAcIiEmAuG^cDyBcIeFqDmKa@cQlLmEuAc@iBk@?aCDoDbD_Cp@}Ec@{CuBaDaHgGcFc@mBsByAmDViAdEwGjDeE}BmDy@sHU{C|AaGkAsDH}CyAwC}EqB_AmAuCVwEsAL_FdEoOmBi@J`@dBu@x@xCvBMfBoB|AeKbAkClCwAIo@qA{DpFk@zKmB|AmHhAcDs@cB{DaGaB_LoMaEoIcBwKyImUgErBbBwFdIkI_@j@"},"aubrac":{"d":[0,2,18,30,35,50,55,75,82,85,102,120,138,142,160,202,215,228,255,265,282,292,295,312,325,338,352,368,375,382,400,418,435,448,458,468,475,518,525,552,560,568,575,592,600,608,622,640,655,668,688,720,762,772,815,865,870,888,898,908,932,948,955,965,985,998,1008,1020,1030,1038,1042,1052,1062,1092,1110,1130,1150,1155,1175,1185,1208,1225,1232,1248,1268,1295,1320,1335,1362,1380,1388,1400,1432,1442,1455,1462,1468,1472,1480,1498,1512,1518,1528,1535,1545,1548,1550,1558,1560,1580,1595,1598,1610,1628,1635,1642,1652,1662,1670,1672,1678,1685,1692,1698,1720,1730,1738,1745,1755,1765,1778,1785,1792,1798,1802,1818,1822,1842,1858,1865,1872,1888,1890,1895,1910,1920,1945,1962,1972,1975,1990,2010,2025,2032,2040,2048,2055,2072,2080,2098,2108,2115,2122,2130,2140,2148,2155,2175,2182,2192,2195,2208,2210,2228,2242,2272,2312,2322,2358,2388,2422,2430,2450,2452,2470,2480,2488,2502,2525,2540,2558,2565,2580,2590,2602,2610,2618,2622,2638,2650,2658,2665,2675,2688,2702,2718,2728,2732,2745,2772,2788,2800,2810,2820,2825,2835,2840,2852,2878,2895,2908,2920,2938,2942,2958,2988,3002,3032,3040,3055,3058,3060,3062,3065,3078,3080,3105,3110,3112,3132,3148,3155,3160,3168,3172,3190,3192,3198,3210,3228,3235,3258,3295,3308,3312,3325,3330,3335,3350,3360,3362,3370,3375,3385,3388,3392,3402,3410,3422,3430,3432,3438,3442,3455,3458,3465,3478,3490,3500,3515,3518,3530,3538,3548,3565,3615,3630,3640,3655,3660,3665,3682,3700,3712,3720,3722,3732,3745,3755,3768,3780,3822,3845,3850,3865,3870,3878,3888,3905,3922,3930,3945,3952,3960,3975,3990,4008,4018,4058,4065,4070,4080,4095,4102,4112,4125,4135,4148,4160,4175,4182,4190,4202,4212,4232,4262,4282,4295,4315,4335,4350,4360,4365,4370,4385,4388,4402,4410,4415,4420,4452,4460,4472,4492,4505,4528,4540,4548,4552,4562,4570,4582,4595,4600,4615,4630,4635,4648,4660,4678,4688,4698,4715,4732,4742,4752,4768,4778,4795,4810,4828,4838,4845,4862,4875,4885,4895,4902,4915,4928,4942,4970,4990,5022,5038,5048,5055,5065,5088,5105,5115,5138,5152,5188,5202,5210,5225,5242,5262,5285,5295,5315,5322,5342,5370,5385,5392,5400,5405,5412,5420,5425,5432,5440,5455,5465,5472,5488,5498,5508,5518,5538,5550,5560,5565,5582,5620,5628,5638,5642,5658,5688,5695,5702,5715,5725,5738,5750,5760,5772,5790,5808,5818,5828,5832,5838,5848,5862,5880,5890,5898,5902,5910,5920,5925,5938,5940,5958,5970,5978,5995,6005,6018,6030,6052,6062,6072,6078,6088,6092,6095,6102,6115,6128,6140,6148,6162,6175,6180,6192,6208,6225,6232,6238,6250,6260,6272,6288,6302,6322,6328,6342,6348,6352,6362,6370,6380,6382,6390,6398,6402,6408,6428,6432,6440,6450,6458,6468,6485,6500,6525,6540,6565,6580,6582,6590,6598,6618,6628,6632,6640,6642,6648,6650,6655,6662,6672,6688,6698,6708,6725,6730,6760,6765,6770,6775,6782,6788,6795,6802,6812,6858,6882,6895,6908,6915,6935,6950,6965,6980,6985,7005,7018,7038,7050,7060,7062,7072,7105,7110,7112,7120,7132,7140,7145,7158,7188,7202,7220,7228,7252,7295,7302,7308,7315,7325,7335,7360,7398,7420,7428,7440,7442,7448,7452,7458,7470],"z":[1011,1011,1012,1017,1020,1033,1036,1041,1042,1043,1042,1044,1046,1046,1053,1079,1086,1097,1123,1130,1137,1139,1140,1141,1148,1156,1158,1158,1158,1163,1172,1175,1191,1191,1187,1184,1182,1168,1169,1184,1186,1189,1194,1211,1220,1227,1231,1231,1238,1248,1259,1298,1294,1296,1302,1311,1312,1314,1318,1319,1310,1308,1308,1307,1302,1294,1288,1284,1285,1288,1291,1301,1309,1314,1312,1303,1305,1305,1312,1327,1370,1395,1400,1397,1370,1347,1336,1336,1342,1344,1344,1344,1330,1326,1310,1296,1287,1278,1269,1271,1271,1268,1261,1255,1249,1247,1246,1241,1239,1219,1211,1210,1204,1190,1186,1181,1174,1168,1159,1156,1149,1141,1135,1132,1127,1128,1126,1120,1112,1106,1086,1077,1079,1083,1088,1098,1101,1121,1130,1134,1137,1140,1141,1146,1180,1194,1204,1206,1211,1213,1230,1259,1281,1285,1287,1291,1294,1290,1286,1272,1270,1274,1277,1268,1244,1227,1216,1205,1200,1194,1193,1194,1194,1192,1196,1213,1228,1225,1206,1183,1155,1149,1131,1129,1119,1110,1103,1089,1064,1043,1033,1029,1020,1011,997,990,984,980,963,948,944,951,964,972,979,979,979,980,982,986,988,993,996,994,991,984,980,974,964,955,937,918,898,892,870,811,800,810,810,808,806,805,804,802,806,807,836,842,844,857,871,873,873,875,878,900,902,907,920,956,968,980,1001,1019,1027,1042,1047,1051,1064,1075,1078,1084,1088,1095,1097,1102,1114,1118,1120,1128,1132,1139,1144,1156,1159,1167,1180,1189,1194,1202,1203,1210,1213,1217,1224,1233,1235,1236,1233,1230,1225,1204,1178,1159,1152,1151,1153,1157,1159,1161,1167,1186,1205,1209,1218,1221,1227,1237,1250,1257,1265,1285,1291,1294,1301,1318,1336,1336,1326,1322,1321,1324,1332,1338,1343,1346,1346,1344,1342,1333,1324,1318,1314,1312,1308,1321,1338,1350,1359,1366,1364,1363,1363,1362,1352,1350,1345,1346,1346,1344,1331,1327,1321,1304,1298,1295,1296,1299,1300,1299,1295,1286,1275,1270,1254,1238,1237,1236,1237,1236,1235,1228,1211,1205,1203,1204,1210,1216,1234,1248,1254,1261,1269,1282,1285,1284,1284,1284,1286,1297,1300,1293,1295,1313,1323,1327,1327,1330,1350,1355,1352,1348,1345,1343,1337,1333,1324,1317,1309,1311,1306,1293,1286,1269,1255,1237,1230,1224,1220,1216,1208,1202,1197,1195,1188,1178,1168,1162,1156,1145,1143,1138,1131,1123,1120,1111,1098,1096,1093,1090,1076,1063,1056,1043,1022,1010,999,995,994,989,986,993,997,999,1004,1011,1029,1049,1066,1074,1080,1084,1091,1098,1099,1094,1094,1092,1089,1090,1089,1084,1076,1065,1046,1038,1031,1027,1015,1007,1003,993,977,961,953,945,921,916,909,881,856,821,811,809,821,842,860,868,871,871,869,853,846,839,822,813,818,820,826,828,832,839,870,876,885,901,912,921,928,929,926,927,923,912,909,899,881,803,778,765,750,746,739,736,727,713,695,677,671,675,694,700,725,730,736,744,760,771,785,791,791,777,766,753,750,743,693,676,669,664,661,663,659,653,648,638,635,624,571,562,557,543,523,510,502,489,480,479,469,464,461,439,435,433,429,425,421,420,419,420,421,426,427,430,431,431,434],"t":[0,1,10,17,21,31,34,46,50,52,61,70,79,82,93,122,130,139,160,167,178,184,185,196,203,211,220,227,231,236,248,259,269,277,282,287,290,311,314,333,338,342,347,361,367,372,381,391,400,409,423,449,471,477,499,527,530,540,546,551,563,570,574,579,589,594,599,605,611,616,619,626,632,650,659,668,679,681,693,704,727,744,748,756,765,778,790,799,816,827,832,839,856,862,869,873,877,880,884,894,902,905,911,914,920,921,922,926,928,938,946,947,954,963,967,971,976,981,985,987,989,993,997,1000,1012,1018,1022,1026,1031,1037,1044,1048,1052,1055,1058,1071,1075,1092,1104,1110,1115,1127,1129,1133,1149,1161,1181,1193,1200,1202,1216,1237,1254,1260,1265,1271,1275,1285,1289,1298,1304,1309,1314,1319,1325,1330,1335,1345,1349,1354,1356,1363,1364,1375,1385,1407,1434,1440,1459,1475,1493,1497,1508,1509,1518,1523,1527,1535,1547,1556,1565,1569,1577,1582,1589,1593,1597,1599,1608,1614,1620,1626,1634,1644,1655,1664,1670,1673,1681,1698,1708,1716,1722,1728,1731,1736,1739,1745,1759,1768,1775,1782,1792,1795,1804,1822,1831,1851,1856,1864,1866,1867,1869,1870,1878,1880,1908,1914,1916,1938,1954,1961,1966,1972,1977,1997,2000,2006,2024,2049,2058,2083,2120,2135,2142,2159,2164,2169,2186,2197,2200,2209,2214,2225,2228,2234,2245,2251,2263,2271,2274,2280,2286,2301,2304,2313,2327,2340,2350,2364,2366,2378,2385,2394,2409,2450,2462,2469,2480,2483,2486,2498,2511,2520,2525,2526,2535,2545,2554,2564,2575,2615,2638,2644,2659,2664,2672,2682,2701,2717,2726,2744,2753,2760,2774,2792,2811,2818,2847,2853,2856,2864,2879,2886,2895,2906,2913,2922,2931,2941,2946,2951,2959,2966,2981,3009,3029,3043,3062,3079,3090,3094,3097,3099,3105,3106,3112,3116,3118,3120,3140,3144,3152,3163,3171,3185,3194,3200,3203,3209,3214,3221,3228,3231,3240,3249,3252,3260,3268,3280,3286,3292,3302,3312,3319,3325,3337,3346,3364,3377,3392,3402,3409,3424,3434,3440,3447,3452,3462,3471,3482,3500,3514,3541,3554,3562,3568,3576,3595,3609,3616,3630,3639,3661,3671,3675,3684,3695,3707,3721,3727,3739,3743,3755,3771,3780,3784,3788,3791,3796,3800,3803,3807,3812,3821,3827,3831,3840,3846,3852,3858,3870,3878,3884,3887,3897,3920,3924,3930,3933,3942,3958,3963,3967,3975,3981,3988,3995,4001,4009,4020,4032,4039,4047,4053,4059,4070,4086,4103,4112,4119,4123,4130,4138,4143,4150,4152,4162,4170,4174,4185,4191,4198,4205,4217,4223,4228,4231,4237,4240,4242,4246,4254,4261,4268,4272,4281,4288,4291,4300,4310,4321,4326,4329,4337,4349,4365,4377,4388,4400,4403,4412,4415,4418,4424,4428,4435,4437,4444,4450,4455,4461,4484,4490,4498,4509,4517,4527,4540,4550,4565,4575,4590,4599,4601,4605,4610,4627,4635,4638,4643,4645,4648,4650,4653,4658,4664,4672,4677,4685,4700,4705,4731,4736,4741,4746,4755,4762,4771,4779,4784,4810,4823,4830,4836,4841,4852,4861,4870,4878,4881,4892,4899,4910,4917,4923,4924,4929,4949,4952,4953,4958,4965,4970,4973,4980,4996,5005,5014,5018,5032,5055,5059,5062,5066,5071,5077,5091,5113,5127,5131,5140,5142,5145,5149,5152,5160],"cp":[0,86,235,349,436,533,596],"pl":"{gvoGokkPOe@lBuI[gHc@oBiFmCi@yAlCcMbCPRo@`AiL}@cLrC{J|@sA~AuK~Au_@hAcHWuH`@eT_@sFIuL^sFIk@oGeEoCmFyDiD{FoBeF{DaCQkBiBwCuJc@iLt@iLBsHvAqE~CiB~@yCU}_@UuDiCeSrAeCxB{@fA}CnG{Dd@cDg@oD}FYeGiF_ByIsCcFwCwL{PqBeVaEk@gFrA{_@jKwa@bAcAbHiB^vEzApEfJbJ`GnAh@nDdDjA|H{ErEwA~AzDzEJvA{DjBm@vAV~BeClDd@lO~BpH`AvI~B|EtJhAh@vI}BnD\\lKG|GaD`CObEmFnGaI|J_LhLeD|FvAhLbIlHcB`BfB[pHmHpTqBvDdD`ElAvCQ`BfAdAxB|@`DaJpF{Cp@cBpC{BGuDnB}ALx@b@GlAcCd@NcAdNd@lJZM^}GbGsEnAsCEwDgA{EvBrDL_Dh@Q~@lAvBEjBhBt@`BpA~OrAxE|AdCn@aD|CmBbDjA|DcAq@gD_A_DTwBbAaAxBcI@{BmC}LyCoHSuDiAyCIiJXk@pAj@zFdA|CfBvL~@jG|ErCmA`@[oBsImCgMiEgDfBsBt@iDOuD{@aD[oL~BOfHtBhDdA|B|@vBhAtA`Ct@hFEvD`BxAhC|L@jDfCvC?h@kErBEl@|BlKt@jJfIhQfM|V|@fFtCjY~MfIpO`M`CPdI}Db@ZpE~H|CjBnApCrEbFtEfMbFhDdGdFtAlClFxCpBpDxETfAxCzB`Ar@gAAoJxA{Gd@kDtBh@fCzClEzAdC~H`D~GExF`@lB~CpEfMpFlF{CvEeAxCyBbDmAz@yAf@mFv@}AbDkE|JuH|DsIhAeHOeHrCyJBuBnCsHpCyTaAcJcCkTVkCwCyGZUa@]Nu@^QiAwGe@UuFiLq@p@a@Wm@mNqBkIg@oDJyBiAuCBuByDqIB}@aA}@i@iHuF_GoAsCsC_OcNsReDgEd@sAvEeAbAgAZeBaFaEqAyEJy@qA_B@oAkCnCc@Et@yA_BwDQoDuBaGyBcAa@^n@dBeAz@iEoBa@YEqDaEwCsEsA}AiEcFuDg@TgDfEyBhAkAjEoHpAaYfLgErF}CdAiEfFc@oAkAm@uGtDgHn@eDsDyBa@k@E{B|CuEh@mDe@aEqCgBqGcPmUsBaOmAk@{FvBeAhAw@bDcCjCdAeLdDkJWqD{FoB{AwByBcAaCcIiDwGoHcA}B{CiSiJiAyCMqB|AoERkJ}@cDEsF}CyE{@gFOwHXqH|BcIHuDk@iDzAuGxBkDpIkC~LoKpH}FjDaErGyH~HiElE_FvC{BvAEnAp@`E|Fj@?`GsAjA_CtA?fA|@zPpAxAmA|@`HaAdN@nHjEvMhEiBhBjBZfBnDIvA}BdEaCz@aHx@}ApFgC|E{Dt@cBrDpCrEoAnHSfDaA~CaBxEaHfFsGvCoBxBiD`BiIdDiAjHSbD}G|DkI^sFs@gDNiL_BuGuBoDj@mF]sDLsH_BiGbBqIzJyJhFkJnBiWLqJa@oFpBFjD{@`KyBrHHlCvBjK?xFvBzQbDxFEvBeAdG]lHlBxHdF`HpJ]wEiDsLEoDuFkIdMqEfGe@yAgBt@aCc@{AkBsAp@sCt@g@dBxAbAfCbFnBbBhDhBx@xBdH~B`C|Cb@bCrBtDpJR~G~BfARjBbFdCtQhDzB_@nChCtARjFkClOCxBhAbCDbEdChDk@xAlG|DtBbCbD~B`F~@hKpEtGfDQjDx@tADHsAbDS|E_ExEqGhDi@zBr@rAYxB`AlDi@lAPiA|GJz@|CtJzCzE~@`DzFvFbA`FpChFnD~DhGvKpChCdDtAvAChD}@n@kAh@ThArC`@nHnD|D`EpCvAbClFbDpDhDdAjAbEO`Gl@`HuBrBeAvAOtDaDhDn@tCjEpAtIz@`JnEbK?rBxEpE|@lAHbBhCjCNiDo@eFNe@zB~@vAdClAn@bAAnGnEbAhAt@tCnCgBzBFmB}DxG~BpExErKpF~FeAbKyG~Fm@Xg@pBpAlBtA`InAdC|CLrBpBeAD|@\\qA\\h@\\hBrBEl@aF|B|H|CbBvCtBcEoH[qBhAeU^wAXtBfA@|AjBRpBrApCdBpBjCvC`WhG`K~GzEIvEu@xBk@rIhB`GrA~E|DbGj@n@`BrHpFfDbExHxElErBlD`@In@_D`BsPO`AnASb@gB?pCbE_Cs@oARpCdElMlI`Gj@tHL`By@nL~AlUxClB{AnAn@vBiA|C~ArBeDnIrK~OjOjExM\\hDmErAg@[]xA\\pBy@rAiE["},"utpma":{"d":[0,25,38,45,50,60,72,85,118,135,148,152,180,190,198,202,230,242,252,272,308,322,340,355,378,390,400,412,425,458,502,508,525,548,560,568,572,588,602,618,630,648,670,718,752,760,772,782,792,800,815,822,835,840,842,870,895,905,955,965,982,998,1015,1025,1030,1042,1062,1065,1068,1075,1088,1110,1120,1125,1132,1140,1158,1172,1185,1195,1222,1250,1278,1290,1310,1315,1320,1355,1365,1408,1430,1440,1445,1452,1462,1495,1502,1510,1515,1525,1532,1540,1552,1560,1565,1572,1578,1582,1590,1600,1605,1612,1620,1628,1642,1645,1650,1655,1672,1685,1690,1692,1695,1700,1712,1720,1730,1748,1760,1770,1778,1785,1790,1792,1800,1805,1815,1830,1838,1845,1855,1868,1910,1932,1942,1950,1962,1972,1975,1982,1990,2000,2012,2025,2035,2052,2062,2070,2080,2090,2108,2118,2130,2142,2172,2198,2230,2250,2278,2295,2310,2320,2330,2345,2355,2372,2382,2390,2410,2430,2448,2462,2468,2472,2478,2490,2510,2518,2525,2535,2548,2558,2562,2570,2580,2588,2602,2615,2632,2640,2652,2672,2685,2695,2715,2722,2735,2755,2760,2778,2788,2800,2830,2845,2858,2868,2890,2898,2905,2915,2928,2935,2952,2982,3000,3008,3018,3025,3030,3038,3040,3050,3078,3090,3095,3128,3142,3145,3152,3162,3175,3195,3202,3208,3215,3225,3228,3235,3240,3245,3252,3268,3288,3302,3308,3312,3325,3340,3355,3358,3385,3405,3410,3415,3422,3430,3440,3458,3465,3472,3475,3480,3488,3492,3508,3512,3525,3540,3555,3565,3570,3582,3585,3588,3590,3608,3615,3620,3622,3628,3632,3638,3640,3658,3662,3670,3688,3690,3698,3718,3728,3750,3768,3778,3785,3798,3815,3820,3840,3852,3860,3865,3870,3872,3885,3888,3905,3915,3932,3938,3950,3962,3972,3978,3982,3990,3992,4010,4018,4028,4035,4042,4050,4068,4078,4088,4095,4110,4118,4128,4138,4155,4175,4185,4192,4208,4225,4242,4248,4252,4265,4268,4272,4280,4282,4292,4310,4340,4348,4365,4380,4395,4415,4425,4438,4455,4468,4475,4492,4515,4525,4555,4565,4592,4600,4612,4618,4622,4650,4658,4672,4690,4698,4708,4728,4735,4742,4760,4772,4785,4790,4810,4820,4840,4862,4868,4872,4885,4905,4915,4922,4932,4940,4948,4952,4968,4980,4985,4992,5002,5012,5022,5045,5058,5068,5082,5105,5115,5132,5138,5145,5150,5160,5165,5185,5192,5200,5208,5215,5222,5230,5238,5240,5245,5255,5258,5262,5265,5270,5272,5285,5298,5310,5320,5328,5342,5352,5365,5372,5378,5385,5388,5390,5395,5405,5418,5430,5442,5458,5478,5485,5495,5500,5512,5528,5540,5550,5558,5568,5575,5585,5595,5598,5600,5608,5625,5635,5645,5650,5658,5675,5685,5690,5695,5705,5710,5725,5738,5758,5765,5768,5775,5782,5785,5798,5812,5825,5830,5835,5860,5872,5880,5885,5890,5895,5898,5908,5910,5912,5920,5935,5940,5952,5965,5972,5980,5988,5998,6010,6020,6025,6038,6048,6060,6068,6092,6100,6115,6120,6130,6150,6158,6188,6210,6220,6235,6248,6260,6270,6278,6295,6308,6318,6322,6332,6338,6345,6352,6365,6375,6385,6398,6412,6440,6445,6455,6462,6468,6490,6498,6508,6532,6548,6568,6580,6590,6598,6608,6625,6630,6638,6642,6648,6662,6678,6690,6695,6710,6725,6742,6745,6750,6772,6778,6785,6795,6812,6825,6832,6842,6850,6868,6885,6892,6902,6920,6928,6932,6940,6958,6968,6972,6988,6995,7005,7010,7015,7020,7028,7038,7045,7060,7078,7092,7102,7120,7130,7145,7168,7180,7195,7205,7210,7215,7228,7240,7250,7255,7275,7285,7288,7295,7302,7310,7318,7325,7332,7345,7352,7362,7380,7382,7388,7402,7415,7422,7425,7432,7458,7468,7475,7485,7495,7502,7510,7518,7528,7538,7545,7550,7558,7568,7572,7580,7592,7595,7600,7608,7615,7625,7628,7638,7648,7655,7670,7690,7705,7735,7740,7748,7755,7770,7785,7788,7800,7810,7815,7825,7835,7845,7850,7855,7860,7868,7872,7878,7885,7895,7905,7910,7918,7930,7935,7942,7948,7958,7962,7968,7975,7992,7998,8005,8015,8022,8030,8038,8040,8050,8055,8060,8075,8082,8090,8095,8098,8102,8115,8122,8140,8145,8148,8162,8170,8182,8195,8222,8232,8240,8252,8265,8272,8282,8305,8322,8335,8352,8375,8388,8408,8420,8438,8458,8468,8485,8508,8522,8530,8538,8542,8555,8570,8578,8592,8600,8608,8612,8622,8630,8642,8652,8662,8672,8680,8690,8695,8705,8710,8738,8745,8760,8770,8778,8788,8795,8800,8808,8812,8820,8832,8835,8845,8852,8858,8870,8880,8895,8898,8905,8915,8918,8928,8940,8955,8962,8975,8988,8992,8998,9002,9008,9020,9038,9048,9062,9088,9095,9098,9100,9125,9138,9145,9158,9175,9180,9185,9190,9198,9205,9218,9222,9235,9242,9268,9282,9295,9298,9305,9322,9330,9340,9348,9360,9370,9382,9385,9390,9400,9410,9412,9415,9428,9435,9442,9460,9468,9480,9482,9502,9512,9545,9565,9588,9600,9608,9618,9620,9665,9675,9680,9685,9690,9695,9700,9708,9722,9738,9752,9758,9775,9825,9838,9845,9850,9868,9912,9928,9940,9948,9968,9975,9992,10010,10018,10035,10045,10055,10060,10068,10080,10090,10098,10105,10108,10112,10132,10158,10165,10175,10195,10210,10218,10228,10235,10252,10262,10275,10285,10292,10298,10300,10308,10315,10328,10352,10390,10400,10408,10418,10420,10425,10435,10465,10472,10480,10492,10502,10508,10515,10522,10535,10550,10565,10578,10590,10620,10662,10688,10700,10718,10730,10745,10748,10750,10765,10772,10788,10810,10828,10832,10875,10910,10920,10932,10945,10955,10980,10998,11032,11065,11082,11092,11105,11130,11140,11145,11152,11158,11162,11170,11178,11185,11195,11202,11220,11225,11232,11245,11250,11262,11270,11275,11280,11288,11292,11295,11302,11310,11322,11330,11335,11345,11358,11365,11372,11385,11410],"z":[618,620,622,623,625,629,635,644,687,708,712,714,737,746,754,758,778,785,787,787,799,800,801,805,816,818,815,813,817,829,823,821,818,819,820,824,829,841,842,843,843,839,842,860,867,866,861,863,872,876,875,874,877,879,880,886,898,901,901,902,900,895,877,866,861,846,821,819,817,809,791,740,726,720,717,722,734,752,773,781,806,831,837,840,858,864,869,898,902,909,928,933,934,936,943,965,966,961,955,934,920,899,859,848,840,826,817,816,818,817,811,798,787,773,728,722,712,706,705,707,707,707,707,707,707,708,709,712,716,721,726,736,746,751,768,779,804,838,849,851,852,862,890,913,924,929,932,933,934,937,941,945,951,961,968,979,988,993,997,1005,1023,1032,1040,1047,1060,1080,1116,1128,1155,1173,1171,1177,1186,1190,1189,1183,1183,1184,1196,1218,1225,1229,1234,1239,1245,1250,1254,1257,1262,1269,1281,1277,1269,1254,1235,1219,1200,1199,1209,1207,1205,1215,1211,1212,1230,1229,1210,1187,1183,1171,1156,1140,1121,1109,1094,1085,1069,1063,1055,1046,1039,1039,1032,1023,1023,1028,1041,1058,1070,1080,1079,1071,1050,1042,1042,1068,1082,1086,1100,1114,1128,1168,1175,1176,1173,1159,1155,1143,1135,1128,1117,1097,1099,1094,1093,1095,1102,1113,1119,1120,1120,1114,1111,1108,1102,1095,1085,1063,1048,1025,1018,1004,985,971,924,910,880,851,825,813,808,799,798,798,797,790,787,784,782,778,773,769,767,763,763,763,769,770,775,795,805,823,819,813,812,813,820,823,830,832,832,834,837,839,839,838,832,828,835,839,849,862,871,874,879,890,894,917,932,954,969,980,990,1019,1031,1047,1062,1093,1103,1115,1127,1151,1177,1193,1204,1227,1255,1285,1293,1301,1322,1327,1336,1351,1356,1373,1405,1459,1465,1472,1483,1495,1525,1535,1545,1560,1574,1581,1587,1587,1590,1618,1622,1632,1631,1623,1624,1629,1659,1663,1665,1683,1691,1691,1686,1682,1678,1678,1675,1674,1676,1697,1709,1734,1776,1782,1784,1783,1805,1813,1816,1822,1835,1844,1841,1816,1806,1802,1799,1794,1784,1775,1763,1753,1756,1771,1803,1807,1792,1789,1776,1764,1741,1733,1717,1705,1683,1667,1663,1664,1662,1654,1649,1637,1608,1601,1588,1582,1570,1564,1531,1505,1484,1479,1472,1448,1446,1456,1460,1458,1450,1447,1444,1440,1438,1423,1405,1385,1369,1350,1339,1325,1316,1292,1272,1254,1245,1241,1239,1239,1240,1242,1243,1245,1252,1269,1268,1254,1243,1228,1204,1195,1195,1196,1201,1206,1229,1244,1254,1265,1269,1285,1299,1304,1324,1349,1366,1374,1385,1454,1491,1516,1532,1548,1562,1569,1605,1615,1624,1648,1686,1693,1689,1669,1658,1649,1643,1637,1626,1619,1617,1621,1621,1604,1589,1549,1542,1533,1531,1532,1548,1548,1541,1532,1530,1531,1534,1542,1550,1558,1577,1585,1590,1591,1593,1594,1597,1604,1617,1621,1625,1635,1644,1639,1641,1657,1665,1667,1662,1663,1664,1639,1632,1613,1610,1625,1646,1678,1743,1760,1772,1768,1757,1701,1654,1624,1614,1590,1572,1550,1546,1539,1508,1505,1503,1500,1493,1496,1495,1486,1477,1456,1445,1447,1460,1493,1508,1518,1529,1554,1569,1575,1580,1588,1612,1625,1636,1644,1652,1661,1666,1673,1677,1685,1699,1730,1729,1709,1694,1669,1630,1616,1605,1590,1553,1543,1541,1535,1491,1475,1471,1461,1453,1443,1432,1418,1394,1344,1326,1311,1302,1298,1288,1255,1228,1211,1206,1189,1152,1132,1118,1107,1096,1089,1078,1063,1043,1018,1001,992,978,958,945,930,922,922,920,920,923,935,937,941,938,934,932,923,926,931,934,941,951,980,997,999,1016,1024,1028,1041,1059,1076,1084,1089,1091,1091,1093,1097,1106,1114,1111,1104,1090,1071,1063,1053,1045,1040,1045,1053,1068,1112,1122,1132,1150,1173,1193,1211,1217,1236,1245,1255,1284,1298,1314,1323,1329,1340,1368,1378,1387,1391,1394,1422,1437,1460,1471,1441,1424,1409,1383,1361,1348,1338,1351,1354,1361,1373,1389,1389,1387,1380,1375,1379,1372,1348,1325,1324,1323,1315,1306,1284,1257,1248,1242,1233,1222,1213,1189,1171,1146,1143,1141,1132,1121,1098,1089,1079,1075,1048,1039,1008,989,977,963,955,950,942,936,929,924,924,917,906,898,887,879,863,859,847,832,829,816,805,795,793,789,784,775,765,755,751,749,748,747,745,742,745,746,746,745,748,749,745,750,749,748,747,745,746,748,745,730,728,726,725,724,724,723,723,722,721,720,719,719,719,719,719,723,740,745,749,766,781,793,814,823,828,826,765,745,729,717,718,716,714,711,710,703,705,707,713,719,724,725,725,722,718,703,699,699,696,701,705,706,702,693,695,700,705,719,720,711,703,702,703,700,696,694,690,687,687,688,690,691,692,698,720,726,734,750,758,762,763,757,734,722,706,693,687,683,682,680,679,679,679,677,677,677,680,681,682,681,684,689,697,717,737,747,761,772,794,821,851,866,866,859,842,840,842,843,842,842,841,839,824,819,819,818,822,823,829,816,813,814,818,817,804,802,798,787,787,784,777,759,749,744,737,733,730,726,719,713,710,708,701,701,701,696,693,685,681,676,667,650,639,635,628,625,622,621,621,620,618,618,618,619,618],"t":[0,13,21,25,28,34,42,52,81,94,103,106,127,135,141,144,164,172,179,189,210,218,228,237,251,257,262,269,276,296,319,321,330,342,350,355,358,368,377,385,391,400,413,442,462,466,472,478,485,490,498,502,509,512,514,530,546,552,578,583,592,600,608,613,615,621,631,632,633,637,644,656,661,664,669,673,686,698,708,717,739,760,776,784,798,802,806,833,839,864,879,886,889,894,901,924,928,932,934,939,944,949,956,960,963,967,970,972,976,981,984,988,992,996,1005,1007,1010,1012,1021,1027,1030,1032,1033,1037,1045,1050,1057,1069,1079,1087,1094,1104,1111,1114,1124,1132,1149,1170,1178,1185,1194,1205,1242,1264,1274,1281,1290,1297,1299,1305,1311,1319,1330,1341,1349,1365,1374,1380,1389,1399,1415,1424,1436,1446,1470,1493,1527,1544,1571,1587,1599,1607,1615,1626,1633,1644,1651,1656,1673,1692,1707,1720,1724,1728,1732,1742,1758,1764,1770,1779,1790,1797,1800,1805,1812,1817,1827,1836,1847,1852,1861,1876,1885,1891,1906,1912,1921,1933,1936,1946,1952,1960,1977,1986,1993,1999,2012,2016,2021,2026,2034,2038,2049,2068,2079,2087,2099,2108,2112,2118,2120,2129,2144,2152,2155,2184,2200,2203,2211,2222,2236,2264,2272,2275,2279,2285,2287,2292,2295,2298,2303,2312,2324,2334,2337,2341,2350,2363,2375,2377,2395,2407,2410,2413,2418,2422,2428,2439,2445,2450,2452,2456,2462,2465,2477,2481,2491,2501,2511,2517,2520,2528,2530,2532,2534,2545,2550,2554,2555,2559,2562,2565,2567,2579,2583,2588,2603,2606,2613,2635,2646,2669,2681,2688,2694,2703,2718,2723,2740,2750,2757,2761,2765,2767,2777,2778,2791,2798,2812,2817,2830,2844,2855,2861,2867,2876,2879,2904,2915,2930,2941,2951,2962,2986,3000,3015,3027,3048,3058,3072,3085,3107,3132,3145,3156,3176,3201,3226,3234,3241,3260,3264,3271,3283,3286,3302,3328,3370,3380,3397,3412,3428,3453,3465,3478,3497,3511,3520,3534,3552,3559,3591,3600,3623,3630,3639,3642,3646,3677,3683,3696,3715,3723,3732,3746,3751,3756,3768,3777,3788,3792,3813,3825,3851,3880,3886,3893,3905,3925,3935,3943,3954,3962,3971,3976,3986,3995,3998,4003,4010,4016,4023,4038,4047,4055,4071,4097,4104,4117,4120,4126,4129,4136,4140,4155,4160,4166,4171,4176,4180,4186,4191,4193,4197,4205,4207,4211,4213,4218,4220,4230,4240,4249,4256,4261,4271,4278,4290,4297,4301,4306,4308,4309,4312,4319,4327,4336,4345,4355,4368,4374,4381,4384,4394,4405,4413,4420,4426,4433,4439,4448,4457,4459,4461,4470,4491,4498,4505,4509,4515,4529,4536,4540,4544,4554,4561,4581,4595,4620,4631,4634,4645,4657,4661,4682,4704,4722,4732,4742,4797,4829,4848,4861,4874,4887,4893,4920,4927,4934,4955,4982,4989,5004,5014,5019,5025,5030,5037,5046,5053,5057,5067,5075,5085,5091,5111,5116,5127,5131,5140,5162,5167,5190,5207,5215,5227,5238,5252,5263,5272,5293,5306,5316,5321,5331,5335,5343,5350,5364,5376,5386,5400,5413,5437,5442,5452,5460,5466,5486,5491,5498,5516,5527,5541,5555,5571,5583,5610,5662,5666,5673,5677,5682,5697,5712,5724,5728,5740,5752,5766,5768,5773,5791,5795,5801,5809,5823,5834,5839,5847,5853,5866,5882,5889,5901,5933,5946,5954,5966,5994,6009,6017,6036,6046,6062,6071,6081,6090,6103,6115,6124,6140,6158,6176,6189,6216,6228,6240,6257,6267,6282,6292,6297,6302,6314,6323,6331,6335,6354,6362,6364,6370,6376,6383,6389,6395,6404,6418,6426,6433,6447,6450,6454,6468,6479,6486,6489,6495,6517,6526,6533,6541,6548,6554,6561,6567,6576,6586,6593,6598,6605,6614,6619,6625,6634,6636,6640,6648,6656,6667,6669,6677,6685,6691,6703,6719,6731,6760,6765,6773,6784,6809,6831,6834,6850,6863,6869,6882,6898,6915,6923,6928,6933,6940,6945,6951,6960,6971,6981,6985,6991,7001,7005,7011,7015,7026,7032,7039,7048,7084,7095,7109,7129,7144,7159,7173,7178,7198,7207,7216,7242,7256,7270,7279,7284,7293,7314,7327,7348,7354,7357,7382,7396,7414,7429,7452,7461,7467,7478,7488,7495,7504,7524,7540,7553,7572,7598,7608,7624,7633,7647,7663,7670,7684,7701,7713,7719,7725,7728,7738,7751,7757,7768,7773,7780,7784,7793,7800,7810,7818,7825,7833,7839,7848,7852,7860,7863,7884,7890,7902,7911,7917,7925,7931,7934,7940,7944,7949,7958,7960,7968,7973,7977,7986,7994,8005,8007,8013,8021,8023,8031,8040,8051,8057,8066,8076,8079,8083,8087,8091,8100,8114,8122,8134,8155,8161,8163,8166,8186,8196,8203,8213,8228,8232,8236,8240,8245,8251,8260,8263,8272,8277,8295,8306,8315,8317,8323,8335,8341,8348,8354,8363,8370,8380,8382,8386,8394,8408,8412,8416,8433,8444,8454,8476,8485,8498,8500,8516,8524,8547,8561,8577,8586,8591,8598,8600,8633,8640,8646,8651,8656,8662,8667,8673,8683,8694,8704,8707,8720,8757,8768,8775,8779,8792,8824,8836,8848,8854,8874,8881,8893,8905,8911,8923,8930,8937,8941,8946,8955,8963,8968,8974,8976,8981,8999,9025,9033,9044,9065,9079,9086,9095,9100,9111,9119,9127,9134,9139,9142,9144,9149,9155,9164,9182,9210,9217,9223,9231,9233,9236,9244,9267,9273,9282,9299,9313,9320,9331,9342,9361,9383,9404,9420,9429,9449,9478,9495,9504,9517,9525,9536,9537,9539,9549,9553,9564,9580,9593,9597,9629,9652,9659,9668,9678,9685,9702,9714,9737,9759,9771,9778,9786,9802,9808,9811,9816,9819,9822,9827,9832,9837,9843,9848,9860,9863,9868,9877,9880,9888,9893,9896,9899,9905,9909,9910,9916,9921,9929,9934,9938,9945,9953,9959,9964,9973,9990],"cp":[0,120,280,466,577,666,825,924,1005],"pl":"aqeqGy_|MeK{GeCjEcBkBgABkCvCeExA{CxEgLnOiGxE_E}C[gBmMwEoAwE}BImAj@gM}FaDuEaDgBuEoKyLiRaFeEcFkHeFaEmHqJmDcEyBqD_AmHsBkG}KwPePwXw@x@eHeCkK_A{DkD{Be@oAVyDvEuCwHwAcJAyHqAgLJoPmUsPyKwSq@{CwE`AsAuEoBuD_@wDiCaISwDoBoGn@_BMu@sIkNwK{FoD_@yJeb@iC{CxDsIrF}BdF}GjAcFMsB`ByGh@qNIw@a@JiBrBDaHpEwMrCoBj@cBh@mDwAeCw@kLuDoGqDkDgDiAgKaLoLeIgJoMiBqGcGiIsAe@k@iB_QtDqDCcTkMyHc@mDe@mAMaBz@sAyEcMqNkAwCw@}CgAeAIkF_AqB~@sCLkG~B\\jAu@l@mDG{Bb@mB`CH`C`Dn@vAxBp@o@}CyAkCzCcGc@e@MyBuAg@kFuGmEyBkARg@L?u@jAc@IsHr@kD`CcDbHuCbB}FZqFSyDgBq@f@cAi@Sv@yCm@{Ab@uEsCsGf@eDgAwCsCkCeDoEmLgZuJeDgDL{Bs@{B{FcCkCL{@m@yCjA_CoCqCiCsF_AeH|AmEhBsK|AoETyDYsFlChBfDjJrCnByA{Go@qHyDaUuCkQFoX_AgNtEeR@qLfCaItCcC|BoDv@gI_CkDaByKuCaCqAqC}IaA_Jp@iHwBaEhFa@hBaArAsAF{DaDuGwHyBgA_B}BkDAcDoEcCuCwAHoB{ALyFaA}CmFcDeDqEiEyH_A_D_DyEaFaKlAkGGuF|C{Ld@oDbEkBtIcCOcBkHkAOgF{CqDfKcNpFsCbE]aBgE_K}CoBcBg@kDiBiEwDoDmBiBaDsJsKaNcDiJmBiBj@_Fw@cDqAo@MuDV]dDx@nLzGxEz@|@nAfOnHfG`@Fu@uAoCcDuAgBoGAoNF{D[sBz@gBj@mF\\GxAdCXgBx@`@BuDhDqGwDyJmF{C{@wARuB~BuFqDuGcCgIJs@xMqClIfDtASbAiAb@uDhBiAmAqEpHV`Cg@pAaAf@TDkB~AzB@rBtEbBDpAvC{EDxI~EbDfCo@P~A~AfF`@_@?}@b@Qs@cLwAeCBsBa@Wf@_BUiAhAv@TYkBaJPyBbBwBIkLXq@vBc@mA{L|@}EmFaLkHuBsCaCNcD_CsFiByK}@kAaI_D_A{GqB_B[qB|@wAE{@oB}Fe@KiGtEoCwBoAgLo@gBoDiDsEmAg@qFoA\\cAy@VwDb@a@pGZzBu@zB@eAwCYkDp@cDcBqKoBgDLmF{@eDY{IaB{BkAqEfD`@jEqG_Ju@XiFqAgCGqJiAcLyC{J?qBnAu@rBcGNm@m@}ArAgCQs@}C{AHgLhCsUxAeCfGeFrFyCfGv@~Il@s@cFaDuEqGkEqEoAcCPuGgEqIcHgC_DsMwIuCcC}L}GoBeBuE}@_AmAwACmLkI_Cq@_FgEmEiIqB}AkAqEuGuHuBgAcB}BaHkBcEuCiCuFmAy@{HeFqDA_IyEgKB_@oB?}B}AyGmEuKw@iFwAgC}CeBsBsA_Cp@s@aB}FF{Ex@iA~@}B]gDh@eBkEqCgCsF}LeDkE_A}EuE_EwIaGyCrByGxCkAOoBkAq@ZcDeAkA}@iImBcBwBcCIwAaBRzD|A`Cr@hDHlD_@UQjAwB`CDr@qA[@p@aAJDv@aEfCqCfF}DrCoCbCo@hDmEpEcDlAyCrEqBt@yAFaBfBD|@f@FlAw@nDa@tDsDvEy@tD~AcEzB|IRyAjC_DhBi@lBa@vH_@tJbBtGDzFCzDdC|Bj@pDy@xEgDy@Qe@\\_@_ArCwG`DgDw@yBgDaAjAa@tDqBvKuCtBqAm@sANm@fFu@SoCzHkCpFjAsKy@`D[QSyDeBuBg@KmD|D}F?PqHj@kBUiBmL`ByD|CaB]iAj@cAm@KxBa@d@CnE[XYo@oBh@uEnEm@dBNnHcClFq@hDGrDoAlCNtFeAdHLrFn@dBjDdEpArEuBvFYtD|DfP`B`ChBdI?zBrCrB|GnGuA|BaO`EeKSaDnAgGm@eE|BwA|GChF{Bx@uDjIgD|DR|Ek@lBHlF^tB`BfBfArCHtHtApEa@pFl@nHdExFpD~RTrBhC`Dt@hDCzBsClOStD{AfEEtQcCdI_GrIeD~DiAbF{AfCmBhDaFzEe@xAYbD[rBL`BqFrB}DpFmEfA}@xAqFpCuE|EmDjJNFfAcA`KkCtAXxBcAdDp@nHmApEgA|B^dDnA|AbCdDnJ`B`Ln@nDnA`FUlItBgALrBnAsB|@zKfAzE`ApAbAzIp@nD^tFbA|@WxApAd@bBvBbD`B`B|BtCtH`CjKtCjHbBlEvFpFlDh@xEhEvJtD|EMxEmEdDoAvAFdAr@pEe@pEcBhDx@rAI|E}JdDy@HSyBw@tBEdAmClBeB|Bd@dBlB`EVL{DpBuDaF}FDy@jA{@fDsGdAyGdBfB^[M}CtLs@jDRpB~AbDzAvBnDxBNlAqCgAuCa@aFxB}CgBiBv@wArA_BfDk@dA`ArBUrD}@e@Xb@tA`B`CYlC}CcARp@lCdCdBlEl@nDXtJ`DrL\\pJhD|Tk@|AvA|B}@~CgFjDsDdGRv@m@lG_DvAy@xAAlFm@rE_CfDKvBcA`AC|Bl@rC`AgApAh@bBAg@hFm@`FVvBtBnApEg@r@dBaApC|@~@zC|Ap@fBDrB_B`CkGnDMvBwAdCzAtEgA`BpArCrBrA@r@_D`BuAI}@wAcGBsByA_@mDmAy@_@INxBmEeA_@sDz@gLm@iBi@EiFnDc@lDkClFuCdF_DpRvBtDJvDdBvGFhHvAfC]pF|@lPdDhJ_@tH^tLo@|OVvHdB`NdDdEtHf@|HtElDYtHIrHbI~EjE~B`@~Be@t@cBlEoBfGq@bCWfGe@tAbCbCRhAbAjDy@~AhB|Dz@dDaA|CpBfDfArB~AjBdEjA`AdDw@v@{ApMjBhBlBvFiBlD^pBcB~Cq@fBfBx@uAdCMMmBaCa@_DqDB{@zBqDbC@v@wAzEGdDyA~F`ANc@n@tCbD}@d@^m@`FfE}@hGj@|A~BhA|GpExAnAt@`Ak@h@dAdA~@pCrEvBnKlB`EvAbJ|G`NzA`BXs@h@JpKfGpExAhArChDjEzEzGhAa@dA|@v@eAxApBd@pDjClFm@`BxBlFS`DjHzLfG[tE~@Nz@iAxClBxKhAxC`D~ApApCvDhDdDrAjDzCRi@y@{AcDaBaAuDJ_@j@NnEfBi@gCzBh@rF|F~BEjE~A^k@fHnFnCtC`LlPdH|GlJbFvEbAhArCGjFZd@nVfJ|@}EhAq@nAb@`@oBlA{@xAIvBhAbDbH`FbEeA`Jz@|A|GfDtOf^zB`G~@}BjAv@~CtJ~O|XhEuEfEnBvBw@xI~AhBnBjDlJx@lLbBxBlC`KyAhEkCzCk@lBa@~CzAtGtC`CpBuApAkCf@[lAl@pFlJ`JpJjAvCjCvCrEnKjEjF\\tDfBhENvD_AlLJzF|AxGPtFkBhB@|B_@b@yBhAmB[d@dHdHhMpEzZl@bFqB|AwBlDC|@JxBhB~Dz@xUaAtCA`DgExBu@`FmA~@yBk@kBbByEr@eFxD}FgB_E`BpBjGfJjPrSdOPhRhAfHNtLfAhH`DhHXb@H{@xEqErBr@dFxDlKz@bHfCt@q@|NrWtLrRdBnE~@hHvCdFfC~CnIxKnGtEpMbQfLlPvD`J~CjBbDnE~KvEnD_@nAp@t@bDhAm@B}BoAoCMyDlAmCrAvElB`AbHp@nA_@r@gD`DqEh@@e@_Hw@wBl@kB?oBhBeB`AIA}@tA]rB`@vDfD`C?r@bA|BeDrEvAdBfB`@tDnBtFdKjH"}};
+var TR=null;
+function pnf(n){return Number(n).toLocaleString("fr-FR");}
+function esc(t){return String(t).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+var COL={ahead:"--blue",band:"--green",behind:"--orange",over:"--yellow",boom:"--red"};
+function lerp(arr,f){var i=Math.floor(f),u=f-i;if(i>=arr.length-1)return arr[arr.length-1];return arr[i]+(arr[i+1]-arr[i])*u;}
+function atPlan(tp){var t=TR.t,n=t.length;if(tp<=t[0])return 0;if(tp>=t[n-1])return n-1;var lo=0,hi=n-1;
+  while(hi-lo>1){var m=(lo+hi)>>1;if(t[m]<=tp)lo=m;else hi=m;}return lo+(tp-t[lo])/((t[hi]-t[lo])||1);}
+function spans(pts,E){var out=[],j=0;for(var i=1;i<pts.length;i++){if(E[i]==null)continue;
+  out.push({from:TR.cp[j],to:TR.cp[i],c:clsT(E[i],pts[i][2])});j=i;}return out;}
+/* ---------- profil ---------- */
+var PZ="seg",_last=null,PG=null,CUR=null,L_cur=null,map=null;
+function hav2(a,b){var r=Math.PI/180,x=(b[1]-a[1])*r*Math.cos((a[0]+b[0])/2*r),y=(b[0]-a[0])*r;return Math.sqrt(x*x+y*y)*6371000;}
+function fAtKm(k){var km=TR.km,lo=0,hi=km.length-1;if(k<=km[0])return 0;if(k>=km[hi])return hi;
+  while(hi-lo>1){var m=(lo+hi)>>1;if(km[m]<=k)lo=m;else hi=m;}return lo+(k-km[lo])/((km[hi]-km[lo])||1);}
+/* Temps de course au point f de la trace : réel (interpolé entre deux pointages), projeté, ou plan. */
+function timeAt(f,S,p){var tp=lerp(TR.t,f),E=S.e||{},pts=S.pts;
+  if(p.last&&(p.fin||f<=TR.cp[p.last])){var i=0,j=-1,q;
+    for(q=1;q<pts.length;q++)if(E[q]!=null&&TR.cp[q]<=f)i=q;
+    for(q=i+1;q<pts.length;q++)if(E[q]!=null){j=q;break;}
+    var Ei=i?E[i]:0,Pi=i?pts[i][2]:0;
+    if(j<0)return {t:Ei,k:"passed"};
+    return {t:Ei+(tp-Pi)/((pts[j][2]-Pi)||1)*(E[j]-Ei),k:"passed"};}
+  if(p.anc&&tp<=pts[p.anc.next][2]){var a=p.anc,A0=p.A||0,P0=p.P||0;
+    if(tp<=a.P)return {t:A0+(tp-P0)/((a.P-P0)||1)*(a.W-A0),k:"passed"};
+    return {t:a.W+(tp-a.P)*p.reff,k:"proj"};}
+  if(p.last)return {t:p.A+(tp-p.P)*p.reff,k:"proj"};
+  return {t:tp,k:"plan"};}
+function cursorInfo(k){var S=PG.S,p=PG.p,f=fAtKm(k),zz=lerp(TR.z,f),f1=fAtKm(k-0.25),f2=fAtKm(k+0.25);
+  var dk=(lerp(TR.km,f2)-lerp(TR.km,f1))*1000,sl=dk>0?Math.round((lerp(TR.z,f2)-lerp(TR.z,f1))/dk*100):0;
+  var T=timeAt(f,S,p),st=toMin(S.start);
+  var l1="km "+lerp(TR.km,f).toFixed(1)+" · "+pnf(Math.round(zz))+" m · "+(sl>0?"+":sl<0?"−":"")+Math.abs(sl)+" %";
+  var l2=T.k==="passed"?"Passé vers <b>"+clock(st+T.t)+"</b> ("+hm(T.t)+")":T.k==="proj"?"Prévu vers <b>"+clock(st+T.t)+"</b> (≈"+hm(T.t)+")":"Plan : <b>"+clock(st+T.t)+"</b> ("+hm(T.t)+")";
+  return {f:f,z:zz,html:l1+"<br>"+l2};}
+function drawCursor(k){if(!PG||!TR)return;var G=PG;k=Math.max(G.a,Math.min(G.b,k));CUR=k;
+  var I=cursorInfo(k),x=G.X(k),y=G.Y(I.z),g=document.getElementById("pcur"),tip=document.getElementById("ptip"),box=document.getElementById("prof"),sv=box.querySelector("svg");
+  if(!g||!tip||!sv)return;
+  g.innerHTML='<line x1="'+x.toFixed(1)+'" x2="'+x.toFixed(1)+'" y1="'+G.pt+'" y2="'+(G.H-G.pb)+'" stroke="var(--ink)" stroke-width="1.3"/>'
+    +'<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="5.5" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/>';
+  tip.innerHTML=I.html;tip.hidden=false;
+  var r=sv.getBoundingClientRect(),br=box.getBoundingClientRect(),px=r.left-br.left+x*r.width/G.W,tw=tip.offsetWidth;
+  tip.style.left=Math.max(0,Math.min(br.width-tw,px-tw/2))+"px";
+  if(map&&window.L){var ll=llAt(I.f);
+    if(!L_cur)L_cur=L.circleMarker(ll,{radius:7,color:css("--ink"),weight:3,fillColor:"#fff",fillOpacity:1,interactive:false}).bindTooltip(I.html,{permanent:true,direction:"top",offset:[0,-10]}).addTo(map);
+    else{L_cur.setLatLng(ll);L_cur.setTooltipContent(I.html);}
+    // La carte suit le repère quand il sort de la zone affichée (carte zoomée sur la position, par exemple).
+    try{if(!map.getBounds().pad(-0.12).contains(ll))map.panTo(ll,{animate:true,duration:0.25});}catch(e){}}}
+function hideCursor(){CUR=null;var g=document.getElementById("pcur"),t=document.getElementById("ptip");if(g)g.innerHTML="";if(t)t.hidden=true;
+  if(L_cur&&map){map.removeLayer(L_cur);L_cur=null;}}
+function initScrub(){var box=document.getElementById("prof");
+  function kOf(e){var sv=box.querySelector("svg");if(!sv||!PG)return null;var r=sv.getBoundingClientRect();if(!r.width)return null;
+    var x=(e.clientX-r.left)*PG.W/r.width;return PG.a+(x-PG.pl)/(PG.W-PG.pl-PG.pr)*(PG.b-PG.a);}
+  function go(e){var k=kOf(e);if(k!=null)drawCursor(k);}
+  box.addEventListener("pointerdown",go);box.addEventListener("pointermove",go);
+  box.addEventListener("pointerleave",function(e){if(e.pointerType==="mouse")hideCursor();});
+  document.addEventListener("pointerdown",function(e){if(CUR!=null&&!box.contains(e.target))hideCursor();});}
+function setPZ(m){PZ=m;document.getElementById("pzAll").className=m==="all"?"on":"";document.getElementById("pzSeg").className=m==="seg"?"on":"";if(_last)drawProfile(_last[0],_last[1],_last[2]);}
+function dvc(v,km){const r=km>0?v/km:0;return r>=75?"dv-r":r>=50?"dv-o":"";}
+function segInfo(P,sg){var e1=document.getElementById("pinf");if(!e1)return;var h1;
+  if(sg==null){var L=P[P.length-1];h1=" · "+L[1].toFixed(1)+" km · +"+pnf(L[3])+" / −"+pnf(L[4])+" m";}
+  else{var q=P[sg],p=P[sg+1],f=p[5],ft=f?' · <span class="fac '+(f>=1.05?"hard":f<=0.95?"easy":"")+'">terrain ×'+f.toFixed(2)+"</span>":"";
+    var dk=p[1]-q[1],k=dk.toFixed(1),u=pnf(p[3]-q[3]),d=pnf(p[4]-q[4]);
+    h1=" · "+k+" km · <span class=\""+dvc(p[3]-q[3],dk)+"\">+"+u+"</span> / <span class=\""+dvc(p[4]-q[4],dk)+"\">−"+d+"</span> m"+ft;}
+  e1.innerHTML=h1;}
+function drawProfile(S,p,est){
+  _last=[S,p,est];
+  var box=document.getElementById("prof");if(!TR){document.getElementById("profCard").hidden=true;return;}
+  document.getElementById("profCard").hidden=false;
+  var W=Math.max(260,Math.round(box.clientWidth-8)),H=W<480?150:180,pl=52,pr=6,pt=48,pb=20,km=TR.km,z=TR.z,n=km.length,K=km[n-1];
+  var a=0,b=K;
+  var cap="";
+  if(PZ==="seg"){var sg=0,f=est?est.f:0;while(sg<TR.cp.length-2&&f>=TR.cp[sg+1])sg++;
+    a=km[TR.cp[sg]];b=km[TR.cp[sg+1]];var m=Math.max(0.2,(b-a)*0.04);cap="Zoom : "+esc(S.pts[sg][0])+" → "+esc(S.pts[sg+1][0])+" · km "+km[TR.cp[sg]].toFixed(1)+" à "+km[TR.cp[sg+1]].toFixed(1);a=Math.max(0,a-m);b=Math.min(K,b+m);}
+  var zmin=Infinity,zmax=-Infinity;
+  for(var i=0;i<n;i++){if(km[i]>=a&&km[i]<=b){if(z[i]<zmin)zmin=z[i];if(z[i]>zmax)zmax=z[i];}}
+  if(!(zmax>=zmin)){zmin=Math.min.apply(null,z);zmax=Math.max.apply(null,z);}
+  segInfo(S.pts,PZ==="seg"?sg:null);
+  var zr=Math.max(PZ==="seg"?60:100,zmax-zmin);if(PZ==="seg"){cap+=" · altitude "+pnf(Math.round(zmin))+" à "+pnf(Math.round(zmax))+" m";zmin-=zr*0.06;zr*=1.12;}
+  var X=function(k){return pl+(k-a)/(b-a)*(W-pl-pr);},Y=function(v){return pt+(1-(v-zmin)/zr)*(H-pt-pb);},inW=function(k){return k>=a-1e-6&&k<=b+1e-6;};
+  function area(f0,f1){var s="M"+X(lerp(km,f0)).toFixed(1)+","+(H-pb)+"L"+X(lerp(km,f0)).toFixed(1)+","+Y(lerp(z,f0)).toFixed(1);
+    for(var i=Math.ceil(f0+1e-9);i<f1;i++)s+="L"+X(km[i]).toFixed(1)+","+Y(z[i]).toFixed(1);
+    s+="L"+X(lerp(km,f1)).toFixed(1)+","+Y(lerp(z,f1)).toFixed(1)+"L"+X(lerp(km,f1)).toFixed(1)+","+(H-pb)+"Z";return s;}
+  // Étiquettes du haut : heure (si point de passage) et, dessous, icône (départ, ravito, point d'eau, arrivée).
+  var LB=[],ends=[],nr=1,ENT=[];
+  TR.cp.forEach(function(ix,i){if(!inW(km[ix]))return;var Ei=(S.e||{})[i],P_=S.pts[i][2],done=Ei!=null,last=i===S.pts.length-1;
+    var t=i===0?"s":(S.pts[i][7]||(last?"f":null)),lab=i===0?"":(done?hm(Ei):(p.anc&&i===p.anc.next?"≈"+hm(p.anc.W+(P_-p.anc.P)*p.reff):(p.last?"≈"+hm(p.A+(P_-p.P)*p.reff):hm(P_))));
+    ENT.push({ix:ix,x:X(km[ix]),lab:lab,t:RV[t]?t:null,pt:i>0,done:done||i===0,col:done?"var("+COL[clsT(Ei,P_)]+")":"var(--muted)"});});
+  // Points d'eau : heure de passage validée, ou heure estimée (zoom tronçon seulement, pour ne pas surcharger la vue course entière).
+  (S.wp||[]).forEach(function(w){if(!inW(w[1]))return;var lab="",col="var(--muted)";
+    if(PZ==="seg"){var i=1;while(i<S.pts.length-1&&S.pts[i][1]<w[1])i++;var q=S.pts[i-1],pq=S.pts[i],tp=q[2]+(w[1]-q[1])/(pq[1]-q[1])*(pq[2]-q[2]);
+      var Wv=(typeof LIVE!=="undefined"&&LIVE&&LIVE.W)?LIVE.W[w[1]]:null;
+      if(Wv!=null){lab=hm(Wv);col="var(--ink)";}
+      else if(!p.last||i>p.last)lab=p.last?"≈"+hm(p.anc&&i===p.anc.next&&w[1]>p.anc.km?p.anc.W+(tp-p.anc.P)*p.reff:p.A+(tp-p.P)*p.reff):hm(tp);}
+    ENT.push({f:fAtKm(w[1]),x:X(w[1]),lab:lab,t:"l",d:1,col:col});});
+  ENT.sort(function(u,v){return u.x-v.x;});
+  ENT.forEach(function(e){var hw=Math.max(e.lab.length*3.7+2,e.t?9:0),cx=Math.min(W-hw,Math.max(pl+hw-10,e.x)),r=0;
+    while(r<3&&ends[r]!=null&&cx-hw<ends[r]+4)r++;
+    if(r===3){r=0;for(var q=1;q<3;q++)if(ends[q]<ends[r])r=q;}
+    ends[r]=cx+hw;nr=Math.max(nr,r+1);e.cx=cx;e.r=r;LB.push(e);});
+  var RH=31;pt=14+RH*Math.max(PZ==="seg"?1:2,nr);H+=pt-48;
+  var gz=[20,50,100,200,250,500,1000].filter(function(v){return zr/v<=4;})[0]||1000,grid="";
+  for(var v=Math.ceil(zmin/gz)*gz;v<=zmin+zr+1e-6;v+=gz){var gy=Y(v).toFixed(1);
+    grid+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+gy+'" y2="'+gy+'" stroke="var(--line)" stroke-width="1"/>'
+      +'<text x="'+(pl-5)+'" y="'+(+gy+4)+'" text-anchor="end" font-size="11" fill="var(--muted)">'+pnf(v)+' m</text>';}
+  var g='<defs><clipPath id="pclip"><rect x="'+pl+'" y="0" width="'+(W-pl-pr)+'" height="'+(H-pb+1)+'"/></clipPath></defs><g clip-path="url(#pclip)">';
+  g=grid+g;
+  g+='<path d="'+area(0,n-1)+'" fill="var(--rest)" opacity=".45"/>';
+  spans(S.pts,S.e||{}).forEach(function(s){g+='<path d="'+area(s.from,s.to)+'" fill="var('+COL[s.c]+')" opacity=".55"/>';});
+  if(est&&!est.fin&&est.f>TR.cp[p.last])g+='<path d="'+area(TR.cp[p.last],est.f)+'" fill="#7B2FBE" opacity=".35"/>';
+  var line="M"+X(km[0]).toFixed(1)+","+Y(z[0]).toFixed(1);for(var i=1;i<n;i++)line+="L"+X(km[i]).toFixed(1)+","+Y(z[i]).toFixed(1);
+  g+='<path d="'+line+'" fill="none" stroke="var(--ink)" stroke-width="1.6" stroke-linejoin="round" opacity=".8"/></g>';
+  var pts=S.pts,E=S.e||{},st=toMin(S.start),span=b-a;
+  var step=span>60?20:span>25?10:span>10?5:span>4?1:0.5;
+  // Position estimée sur l'axe des km (violet, comme la progression) ; les graduations trop proches s'effacent.
+  // Affichage « restant » (bascule du haut d'écran) : distance restante jusqu'au prochain point (zoom section) ou jusqu'à l'arrivée (toute la course) ; sinon le km estimé.
+  var kE=(est&&!est.fin)?lerp(km,est.f):null,xE=kE!=null&&inW(kE)?X(kE):null,rstM=store.get("nextMode","rest")!=="race",
+    kEnd=PZ==="seg"?S.pts[Math.min(p.last+1,S.pts.length-1)][1]:S.pts[S.pts.length-1][1],wE=rstM?46:26;
+  if(xE!=null){var tx=Math.max(pl+wE,Math.min(W-wE,xE));g+='<text x="'+tx.toFixed(1)+'" y="'+(H-5)+'" text-anchor="middle" font-size="13" font-weight="700" fill="#7B2FBE" font-family="Barlow Condensed,Arial Narrow,sans-serif">'+(rstM?'reste '+Math.max(0,kEnd-kE).toFixed(1)+' km':kE.toFixed(1))+'</text>';}
+  for(var k=Math.ceil(a/step-1e-9)*step;k<=b+1e-9;k+=step){var x=X(k);if(x<pl+8||x>W-12)continue;if(xE!=null&&Math.abs(x-Math.max(pl+wE,Math.min(W-wE,xE)))<wE+10)continue;g+='<text x="'+x.toFixed(1)+'" y="'+(H-5)+'" text-anchor="middle" font-size="12" fill="var(--muted)">'+(step<1?k.toFixed(1):Math.round(k))+'</text>';}
+  var ico=function(t,x,y,dash){return '<g style="color:var(--ink)"><circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="8" fill="var(--card)" stroke="var(--ink)" stroke-width="1.1"'+(dash?' stroke-dasharray="2 2"':'')+'/>'+RV[t][1].replace('<svg ','<svg x="'+(x-5).toFixed(1)+'" y="'+(y-5).toFixed(1)+'" width="10" height="10" ')+'</g>';};
+  LB.forEach(function(L){var top=4+RH*L.r,bl=top+14,iy=L.lab?top+23:top+9,yb=L.t?iy+8:bl+4;
+    var x=L.x,y=L.ix!=null?Y(z[L.ix]):Y(lerp(z,L.f));
+    g+='<line x1="'+x.toFixed(1)+'" x2="'+x.toFixed(1)+'" y1="'+y.toFixed(1)+'" y2="'+yb+'" stroke="var(--muted)" stroke-width="1" stroke-dasharray="3 4"/>';
+    if(Math.abs(L.cx-x)>1)g+='<line x1="'+x.toFixed(1)+'" x2="'+L.cx.toFixed(1)+'" y1="'+yb+'" y2="'+yb+'" stroke="var(--muted)" stroke-width="1" stroke-dasharray="3 4"/>';
+    if(L.pt)g+='<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="4" fill="'+(L.done?"var(--ink)":"var(--card)")+'" stroke="var(--ink)" stroke-width="2"/>';
+    if(L.lab)g+='<text x="'+L.cx.toFixed(1)+'" y="'+bl+'" text-anchor="middle" font-size="15" font-weight="700" fill="'+L.col+'" font-family="Barlow Condensed,Arial Narrow,sans-serif">'+L.lab+'</text>';
+    if(L.t)g+=ico(L.t,L.cx,iy,L.d);});
+  if(est&&inW(lerp(km,est.f))){var ex=X(lerp(km,est.f)),ey=Y(lerp(z,est.f));g+='<circle cx="'+ex+'" cy="'+ey+'" r="7" fill="#7B2FBE" stroke="#fff" stroke-width="2.5"/>';}
+  g+='<g id="pcur"></g>';
+  box.innerHTML='<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" style="display:block;width:100%;height:auto" role="img" aria-label="Profil altimétrique avec la progression">'+g+'</svg><div class="ptip" id="ptip" hidden></div>'+(cap?'<div class="pcap">'+cap+'</div>':'');
+  PG={a:a,b:b,W:W,H:H,pl:pl,pr:pr,pt:pt,pb:pb,X:X,Y:Y,S:S,p:p};
+  if(CUR!=null&&CUR>=a&&CUR<=b)drawCursor(CUR);else if(CUR!=null)hideCursor();
+}
+
+function decodePl(s){var pts=[],i=0,a=0,b=0;while(i<s.length){var r=0,sh=0,c;do{c=s.charCodeAt(i++)-63;r|=(c&31)<<sh;sh+=5;}while(c>=32);a+=(r&1)?~(r>>1):(r>>1);
+  r=0;sh=0;do{c=s.charCodeAt(i++)-63;r|=(c&31)<<sh;sh+=5;}while(c>=32);b+=(r&1)?~(r>>1):(r>>1);pts.push([a/1e5,b/1e5]);}return pts;}
+function loadTR(k){var t=TRK[k];TR=t?{km:t.d.map(function(v){return v/100;}),z:t.z,t:t.t.map(function(v){return v/10;}),cp:t.cp,ll:t.pl?decodePl(t.pl):null}:null;}
+let LIVE=null;
+/* ---------- GPS du téléphone ----------
+   Une position à l'ouverture de la page puis toutes les 2 min tant qu'elle est affichée (pas de suivi continu).
+   Placée sur la trace autour de la section en cours : sert de repère pour la position et le prochain point (comme un point d'eau validé),
+   envoyée aux spectateurs ; si elle est nettement après le prochain point non pointé, propose ce pointage (jamais validé tout seul). */
+const GPS={busy:false,ts:0,st:"",denied:false,shKm:null,shTs:0};
+function lastOf(s,pts){let l=0;for(let i=1;i<pts.length;i++)if(s.e[i]!=null)l=i;return l;}
+function gpsWant(force){if(!navigator.geolocation||GPS.denied||GPS.busy||!TR||!TR.ll)return;
+  const R=RACES[cur],s=state(),last=lastOf(s,R.pts);if(last>=R.pts.length-1||(!last&&!preOk(s)))return;
+  if(!force&&Date.now()-GPS.ts<110000)return;GPS.busy=true;GPS.ts=Date.now();const k=cur;
+  try{navigator.geolocation.getCurrentPosition(p=>{GPS.busy=false;if(k===cur)gpsUse(p.coords.latitude,p.coords.longitude,p.coords.accuracy||0,Date.now());},
+    e=>{GPS.busy=false;// Page ouverte depuis un fichier (adresse content://) : le navigateur bloque le GPS sans rien demander.
+    GPS.st=e&&e.code===1?(window.isSecureContext===false?"GPS bloqué (fichier)":"GPS refusé"):"";if(e&&e.code===1)GPS.denied=true;gpsSt();},{enableHighAccuracy:true,timeout:20000,maximumAge:60000});}catch(e){GPS.busy=false;}}
+function gpsNear(lat,lon,i0,i1){const L=TR.ll,cl=Math.cos(lat*Math.PI/180),mx=111320*cl,my=110540;let best=null;
+  for(let i=Math.max(0,i0);i<Math.min(L.length-1,i1);i++){const ax=(L[i][1]-lon)*mx,ay=(L[i][0]-lat)*my,bx=(L[i+1][1]-lon)*mx,by=(L[i+1][0]-lat)*my,dx=bx-ax,dy=by-ay,l2=dx*dx+dy*dy;
+    let u=l2?-(ax*dx+ay*dy)/l2:0;u=Math.max(0,Math.min(1,u));const x=ax+u*dx,y=ay+u*dy,d=Math.hypot(x,y);if(!best||d<best.d)best={f:i+u,d:d};}return best;}
+function gpsUse(lat,lon,acc,ts){const R=RACES[cur],pts=R.pts,s=state(),E=s.e,last=lastOf(s,pts);if(last>=pts.length-1||(!last&&!preOk(s)))return;
+  const A0=last?E[last]:0,n=last+1,n2=Math.min(n+1,pts.length-1),b=gpsNear(lat,lon,TR.cp[last]-6,TR.cp[n2]+1);if(!b)return;
+  if(b.d>Math.max(200,acc+100)){GPS.st=last?"GPS hors trace":"";gpsSt();return;}
+  const km=lerp(TR.km,b.f),el=elapsedNow(toMin(s.start),A0,s.t0)-(Date.now()-ts)/60000;GPS.st="";
+  if(km<pts[last][1]-0.3){gpsSt();return;}
+  if(km>pts[n][1]+0.3&&n<pts.length-1){const q=pts[n],p2=pts[n2],Pk=q[2]+(km-q[1])/((p2[1]-q[1])||1)*(p2[2]-q[2]),reff=LIVE&&LIVE.reff||1;
+    s.gm={n:n,t:Math.max(A0+1,Math.round(el-(Pk-q[2])*reff)),km:+km.toFixed(2)};delete s.g;}
+  else{delete s.gm;s.g={km:+Math.min(km,pts[n][1]-0.05).toFixed(2),n:n,el:+el.toFixed(1),ts:ts,acc:Math.round(acc),dd:Math.round(b.d)};}
+  store.set("st2_"+cur,s);
+  if(last&&s.g&&(GPS.shKm==null||Math.abs(s.g.km-GPS.shKm)>=0.2||ts-GPS.shTs>=300000)){GPS.shKm=s.g.km;GPS.shTs=ts;queueShare(cur);}
+  if(typingNow())gpsSt();else render();}
+function gpsTxt(s){const g=s.g,last=lastOf(s,RACES[cur].pts);if(GPS.st)return " · "+GPS.st;if(g&&g.n===last+1){const d=new Date(g.ts);return " · GPS "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");}return "";}
+function gpsSt(){const s=state();$("brandDep").textContent=(Object.keys(s.e).length||s.t0?"départ ":"départ prévu ")+s.start+gpsTxt(s);}
+function elapsedNow(st,A,t0){if(t0)return Math.max(A,(Date.now()-t0)/60000);const d=new Date();let el=((d.getHours()*60+d.getMinutes()+d.getSeconds()/60-st)%1440+1440)%1440;if(el<A-600)el+=1440;return Math.max(A,el);}
+function inTxt(m){m=Math.round(m);return m<1?"maintenant":m<60?"dans ≈ "+m+" min":"dans ≈ "+Math.floor(m/60)+"h"+String(m%60).padStart(2,"0");}
+function aheadItems(){const {R,E,st,last,reff,el}=LIVE,pts=R.pts,items=[];
+  pts.forEach((q,i)=>{if(i>last)items.push({km:q[1],name:q[0],t:q[7]||(i===pts.length-1?"f":"p"),tp:q[2],pt:true,i:i});});
+  (R.wp||[]).forEach(w=>{const j=pts.findIndex(q=>q[1]>w[1]);if(j<1)return;const a=pts[j-1],b=pts[j];items.push({km:w[1],name:w[0],t:"w",lab:w[2],tp:a[2]+(w[1]-a[1])/(b[1]-a[1])*(b[2]-a[2])});});
+  items.sort((x,y)=>x.km-y.km);
+  const kmLast=last?pts[last][1]:0,anc=LIVE.anc,tOf=it=>(anc&&it.km>anc.km&&it.km<=pts[anc.next][1]+1e-9)?anc.W+(it.tp-anc.P)*reff:(last?E[last]+(it.tp-pts[last][2])*reff:it.tp);
+  const W=LIVE.W||{};return items.filter(it=>it.km>kmLast+0.05&&!(it.t==="w"&&(W[it.km]!=null||(el!=null&&tOf(it)<el-10)))).map(it=>Object.assign(it,{tt:tOf(it)}));}
+function wpLive(){const bar=$("wpBar"),grid=bar.parentNode,ni=$("nextIn");const {R,last,el}=LIVE;
+  // Liste : un point d'eau dépassé de plus de 10 min passe en « passé » sans attendre un nouveau pointage (comme le bandeau).
+  if(last&&el!=null)document.querySelectorAll("#list li.wp:not(.done)").forEach(l=>{const tw=parseFloat(l.dataset.tw);
+    if(!isNaN(tw)&&tw<el-10){l.classList.add("done");l.dataset.next="";l.querySelectorAll(".wpt,.wpok").forEach(x=>x.remove());}});
+  if(last===R.pts.length-1){bar.hidden=true;grid.classList.remove("haswp");if(ni)ni.textContent="";return;}
+  const A=aheadItems(),np=A.find(it=>it.pt),w=A.find(it=>it.t==="w"&&np&&it.km<np.km);
+  // En course, deux affichages (appui sur la partie droite du bandeau pour basculer, choix mémorisé) :
+  // « restant » (par défaut) : en gros « dans ≈ 1h22 », le temps de course prévu « ≈ 3h10 » sur la ligne du point ;
+  // « course » : en gros « ≈ 3h10 », « dans ≈ 1h22 » sur la ligne du point.
+  const rest=store.get("nextMode","rest")!=="race",
+    cdH=tt=>{const m=Math.round(tt-el);return '<span class="cd"><i>dans</i>'+(m<1?"≈ 0 min":"≈ "+(m<60?m+" min":Math.floor(m/60)+"h"+String(m%60).padStart(2,"0")))+'</span><small>'+clock(LIVE.st+tt)+'</small>';},
+    rcH=tt=>'≈ '+hm(tt)+'<small>'+clock(LIVE.st+tt)+'</small>',
+    lbT=tt=>' · <span class="dn">'+(rest?'≈ '+hm(tt):inTxt(tt-el))+'</span>';
+  if(ni)ni.innerHTML=np&&el!=null?lbT(np.tt):"";if(np&&el!=null)$("nextH").innerHTML=rest?cdH(np.tt):rcH(np.tt);
+  {const ar=window._arr;if(rest&&ar&&!ar.fin&&el!=null){$("projLbl").innerHTML='Arrivée estimée'+(ar.gps?' (GPS '+ar.gps+')':'')+' · <b>≈ '+hm(ar.proj)+'</b> <span class="pd '+clsT(ar.proj,ar.T)+'">'+dmin(ar.proj-ar.T)+'</span>';$("projT").innerHTML=cdH(ar.proj);}}
+  if(!w){bar.hidden=true;grid.classList.remove("haswp");return;}
+  bar.hidden=false;grid.classList.add("haswp");
+  bar.className="wpbar m";bar.innerHTML=`<span class="lb">${w.lab} · km ${w.km.toFixed(1)}${el!=null?lbT(w.tt):""}</span><div class="lf">${rvSvg("w")}<b>${w.name}</b></div><div class="vv">${el!=null&&rest?cdH(w.tt):rcH(w.tt)}</div>`;}
+function wpMark(km,on){const s=state();s.w=s.w||{};if(on){const E=s.e,ks=Object.keys(E).map(Number);const A=ks.length?E[Math.max(...ks)]:0;s.w[km]=elapsedNow(toMin(s.start),A,s.t0);}else delete s.w[km];
+  store.set("st2_"+cur,s);render();if(on)goNext(true);}
+// Point d'eau validé sur le tronçon en cours : sert de repère pour la position et l'heure au prochain pointage.
+function wpAnchor(R,s,last){const pts=R.pts,W=s.w||{};if(last>=pts.length-1)return null;const q=pts[last],p=pts[last+1],A=last?s.e[last]:0;let best=null;
+  (R.wp||[]).forEach(w=>{if(w[1]>q[1]&&w[1]<p[1]&&W[w[1]]!=null&&W[w[1]]>A&&(!best||w[1]>best.km))best={km:w[1],P:q[2]+(w[1]-q[1])/(p[1]-q[1])*(p[2]-q[2]),W:W[w[1]],next:last+1};});
+  // Position GPS récente (moins de 3 h) dans la section en cours : repère si elle est plus récente que le point d'eau validé.
+  const g=s.g;if(g&&g.n===last+1&&g.el>A&&g.km>q[1]&&g.km<p[1]&&Date.now()-g.ts<3*3600e3&&(!best||g.el>best.W))best={km:g.km,P:q[2]+(g.km-q[1])/(p[1]-q[1])*(p[2]-q[2]),W:g.el,next:last+1,gps:true};
+  return best;}
+// Arrivée recalculée entre deux pointages sur une position GPS récente (moins de 5 min), précise et sur la trace (60 m),
+// avec le même calcul que la montre (Black GPS 2.5) : au moment d'un pointage, les deux calculs donnent le même résultat.
+const GPS_ARR_AGE=5*60000,GPS_ARR_ACC=60;
+var stArm=0,gmArm=0; // instants du premier appui sur « Annuler » (départ) et sur « Saisir ≈ … »
+var stPend=null,stPendAt=0;
+const START_BTN_MAX=30;
+// Date et heure réelles du départ (jour de la course + heure de départ affichée), si la date de la course est connue.
+function startAbs(s){const r=RACES[cur];if(!r||!r.date||!/^\d{4}-\d\d-\d\d$/.test(r.date))return null;const [y,mo,d]=r.date.split("-").map(Number);
+  let m=toMin(s.start),m0=toMin(r.start)||m;if(m<m0-720)m+=1440;else if(m>m0+720)m-=1440;return new Date(y,mo-1,d,0,m).getTime();}
+// « Je pars » / « Annuler » visibles jusqu'à 30 min après le départ, puis plus jamais (départ réel s'il a été donné, sinon jour et heure prévus).
+// Course sans date (outil généré sans date) : seule l'heure est connue, le bouton revient 12 h après comme avant.
+function stBtnOn(s){let el;if(s.t0)el=(Date.now()-s.t0)/60000;else{const a=startAbs(s);
+  if(a==null){el=elapsedNow(toMin(s.start),0,null);return !(el>START_BTN_MAX&&el<720);}el=(Date.now()-a)/60000;}
+  return el<=START_BTN_MAX;} // minutes après l'heure de départ au-delà desquelles « Je pars » / « Annuler » disparaissent // nouvelle heure de départ saisie, en attente de confirmation (8 s)
+function planAtKm(k,km,pts){const t=TRK[k];
+  if(t&&t.d&&t.t){const x=km*100,d=t.d;if(x<=d[0])return t.t[0]/10;for(let i=1;i<d.length;i++)if(d[i]>=x){const u=(x-d[i-1])/((d[i]-d[i-1])||1);return (t.t[i-1]+u*(t.t[i]-t.t[i-1]))/10;}return t.t[t.t.length-1]/10;}
+  for(let i=1;i<pts.length;i++)if(pts[i][1]>=km){const a=pts[i-1],b=pts[i];return a[2]+(km-a[1])/((b[1]-a[1])||1)*(b[2]-a[2]);}return pts[pts.length-1][2];}
+function projModel(cpP,cpA,p,a,T){const g=a/p;let mx=g,o=0;while(o<cpP.length&&cpP[o]<p-1e-7)o++;let c=o-1;
+  if(!(c>=0&&cpA[c]==null)){while(c>=0&&p-cpP[c]<30&&(c-1<0||cpA[c-1]!=null))c--;const l=c>=0?cpP[c]:0,gA=c>=0?cpA[c]:0;
+    if(p-l>=30)mx=0.6*g+0.4*Math.min(1.2,Math.max(0.85,(a-gA)/(p-l)));}
+  const eff=1+((mx>1?mx:1-(1-mx)*0.5)-1)*Math.min(1,p/T);return {eff:eff,proj:a+(T-p)*eff};}
+// Avant le premier pointage, le GPS sert dès l'heure de départ (théorique, modifiée, ou « Je pars »),
+// et seulement pendant la durée plausible de la course, pour ne pas solliciter le GPS les autres jours.
+// Temps écoulé depuis le départ avant le premier pointage : départ réel (« Je pars »), sinon jour et heure prévus, sinon heure seule (course sans date).
+function preEl(s){if(s.t0)return (Date.now()-s.t0)/60000;const a=startAbs(s);return a!=null?(Date.now()-a)/60000:elapsedNow(toMin(s.start),0,null);}
+function preOk(s){if(s.t0)return true;const pts=RACES[cur].pts,T=pts[pts.length-1][2],el=preEl(s);return el>=1&&el<=Math.min(T*1.5,1320);}
+function gpsArr(k,s,pts,last,T){const g=s.g;if(!g||(!last&&!preOk(s))||last>=pts.length-1||g.n!==last+1)return null;
+  const A=last?s.e[last]:0;if(!(g.el>A)||Date.now()-g.ts>GPS_ARR_AGE||!(g.acc<=GPS_ARR_ACC)||!(g.dd!=null&&g.dd<=GPS_ARR_ACC))return null;
+  if(!(g.km>pts[last][1]&&g.km<pts[last+1][1]))return null;
+  const P=planAtKm(k,g.km,pts);if(!(P>pts[last][2]&&P>=3&&P<T))return null;
+  // Avant le premier pointage, l'heure de départ n'est pas encore vérifiée : une allure plus rapide que le vainqueur,
+  // ou au-delà du seuil « temps très lent », signale une heure de départ fausse plutôt qu'une vraie allure.
+  if(!last){const q=pts[1],wr=q[6]!=null?q[6]/q[2]:0.75,r=g.el/P;if(r<wr||r>1.2+0.015*P/60)return {bad:true};}
+  const cpP=pts.slice(1).map(q=>q[2]),cpA=pts.slice(1).map((q,i)=>i+1<=last&&s.e[i+1]!=null?s.e[i+1]:null);
+  const r=projModel(cpP,cpA,P,g.el,T),d=new Date(g.ts);
+  return {proj:r.proj,eff:r.eff,P:P,el:g.el,ts:g.ts,hh:String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")};}
+let wpPend=null;
+// Passage très en avance sur l'heure estimée : demande une confirmation (deuxième appui).
+function wpCheck(km,btn){if(!LIVE)return false;if(wpPend&&wpPend.km===km){clearTimeout(wpPend.t);wpPend=null;return false;}
+  const it=aheadItems().find(x=>x.t==="w"&&x.km===km);if(!it)return false;
+  const s=state(),E=s.e,ks=Object.keys(E).map(Number),A=ks.length?E[Math.max(...ks)]:0,base=LIVE.anc?LIVE.anc.W:A,now=elapsedNow(LIVE.st,A,s.t0),d=it.tt-base,a=now-base;
+  if(!(d>5&&a<0.6*d))return false;
+  btn.textContent="Confirmer le passage";btn.classList.add("confirm");
+  btn.insertAdjacentHTML("beforebegin",`<span class="wpwarn">Passage prévu vers ${clock(LIVE.st+it.tt)} (≈ ${hm(it.tt)}), il est ${clock(LIVE.st+now)} : c'est très tôt. Appuie encore pour confirmer.</span>`);
+  wpPend={km:km,t:setTimeout(()=>{wpPend=null;render();},6000)};return true;}
+function whenTxt(t){const {st,el}=LIVE;return (el!=null?inTxt(t-el)+" ":"")+"(vers "+clock(st+t)+")";}
+function ravHTML(){if(!LIVE)return "";const {R,last}=LIVE,pts=R.pts;if(last===pts.length-1)return "";
+  const A=aheadItems(),nextPt=A.find(it=>it.pt),food=A.find(it=>it.t==="c"||it.t==="b"),water=A.find(it=>["l","c","b","w"].includes(it.t));
+  const out=[];
+  if(water&&water!==nextPt&&!(water.t==="w"&&nextPt&&water.km<nextPt.km))out.push(water);
+  if(food&&food!==nextPt&&food!==water)out.push(food);
+  if(!food&&!water)return `<div class="ravl none">Plus de ravito ni de point d'eau avant l'arrivée.</div>`;
+  let h=out.map(it=>`<div class="ravl">${rvSvg(it.t)}<span>${it.name} · km ${it.km.toFixed(1)} · <span class="nw">${whenTxt(it.tt)}</span></span></div>`).join("");
+  if(!food)h+=`<div class="ravl none">Plus de ravito complet avant l'arrivée.</div>`;
+  return h;}
+function live(){if(!LIVE)return;
+  // Position GPS devenue trop ancienne : l'arrivée revient au calcul depuis le dernier pointage.
+  {const ar=window._arr;if(ar&&ar.gts&&Date.now()-ar.gts>GPS_ARR_AGE){render();return;}}
+  // Avant le premier pointage : fait disparaître le bouton de départ une fois le délai passé.
+  if(!LIVE.last&&window._stBtn&&!stBtnOn(state())){render();return;}
+  liveTs=Date.now();gpsWant();const {S,pp,st,last,reff,T}=LIVE;
+  if(last&&!pp.fin)LIVE.el=elapsedNow(st,pp.A,LIVE.t0);
+  $("rav").innerHTML=ravHTML();wpLive();
+  let est=null;
+  // Position estimée sur le profil : depuis le dernier pointage ou, avant le premier, depuis le départ (au rythme du plan, recalée sur le GPS s'il y en a).
+  if(TR){let tNow=null;const rf=last?reff:1;
+    if(last){if(pp.fin)est={f:TR.km.length-1,fin:true};else tNow=Math.max(pp.A,LIVE.el);}
+    else{const s0=state();if(preOk(s0))tNow=Math.max(0,preEl(s0));}
+    if(tNow!=null){const a=pp.anc;let tp,f0=TR.cp[last];if(a&&tNow>=a.W-1){tp=Math.min(T,a.P+Math.max(0,tNow-a.W)/rf);f0=fAtKm(a.km);}else tp=Math.min(T,pp.P+(tNow-pp.A)/rf);est={f:Math.max(f0,atPlan(tp)),tNow:tNow};}}
+  drawProfile(S,pp,est);if(typeof fitStick==="function")fitStick();}
+(function(){const pc=document.getElementById("profCard");if(store.get("profOpen",true)===false)pc.open=false;
+  pc.addEventListener("toggle",()=>{store.set("profOpen",pc.open);fitStick();if(pc.open&&_last)drawProfile(_last[0],_last[1],_last[2]);});})();
+// Haut d'écran fixe : il se détache pendant la saisie (clavier ouvert) ou s'il prend trop de place à l'écran.
+function fitStick(){const st=document.getElementById("stick"),h=st.getBoundingClientRect().height,loose=h>innerHeight-100;st.classList.toggle("loose",loose);
+  document.documentElement.style.scrollPaddingTop=(loose||document.body.classList.contains("typing")?8:h+8)+"px";}
+document.addEventListener("focusin",e=>{if(e.target.matches&&e.target.matches("input.el")){document.body.classList.add("typing");fitStick();const el=e.target;setTimeout(()=>{if(document.activeElement===el)el.scrollIntoView({block:"center"});},350);}});
+document.addEventListener("focusout",e=>{if(e.target.matches&&e.target.matches("input.el"))setTimeout(()=>{const a=document.activeElement;if(!(a&&a.matches&&a.matches("input.el"))&&!document.querySelector("button.now.confirm")){document.body.classList.remove("typing");fitStick();}},400);});
+window.addEventListener("resize",fitStick);setTimeout(fitStick,0);
+initScrub();document.getElementById("pzAll").onclick=()=>setPZ("all");document.getElementById("pzSeg").onclick=()=>setPZ("seg");
+window.addEventListener("resize",()=>{clearTimeout(window.__rz);window.__rz=setTimeout(()=>{if(_last)drawProfile(_last[0],_last[1],_last[2]);},150);});
+// Mise à jour à l'heure : vérifiée toutes les 10 s d'après l'horloge (et non un minuteur de 60 s, que le téléphone met en pause écran éteint).
+let liveTs=0,wakeTs=0;
+function typingNow(){const a=document.activeElement;return !!(a&&a.matches&&a.matches("input"));}
+function wake(){if(document.hidden||typingNow()||Date.now()-wakeTs<1500)return;wakeTs=Date.now();render();setTimeout(()=>goNext(false),60);}
+setInterval(()=>{if(document.hidden||typingNow())return;if(Date.now()-liveTs>90000)wake();else if(Date.now()-liveTs>=60000)live();},10000);
+["pageshow","focus"].forEach(ev=>window.addEventListener(ev,wake));document.addEventListener("resume",wake);
+
+function rvSvg(t){return RV[t]?'<span class="rv rv-'+t+'">'+RV[t][1]+'</span>':"";}
+function render(msg){
+  document.body.classList.remove("typing");
+  $("state").classList.remove("warn");
+  const R=RACES[cur],s=state(),pts=R.pts,E=s.e,st=toMin(s.start);
+  $("brandName").textContent=R.name;
+  {const aw=$("ambWarn"),amb=isAmb(cur);aw.hidden=!amb;if(amb)$("ambTxt").textContent="Des temps de test d'une ancienne version de « "+R.name+" » ont été trouvés : ils peuvent être décalés d'un point (la liste des points a changé). Rien n'est envoyé aux spectateurs tant que tu n'as pas choisi.";}
+  $("tabs").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.k===cur));
+  if(Object.keys(E).length)stPend=null;
+  $("start").value=stPend||s.start;$("startHint").textContent="(recalée au 1er pointage)";document.querySelector(".start").hidden=Object.keys(E).length>0;
+  let last=0;for(let i=1;i<pts.length;i++)if(E[i]!=null)last=i;window._arr=null;
+  $("brandDep").textContent=(Object.keys(E).length||s.t0?"départ ":"départ prévu ")+s.start+gpsTxt(s);
+  const T=pts[pts.length-1][2];$("goal").textContent=hm(T);
+  let reff=1;const anc=wpAnchor(R,s,last);
+  {const gm=s.gm,show=gm&&gm.n===last+1&&s.gi!==gm.n&&last<pts.length-1;$("gpsMiss").hidden=!show;
+    if(show){const arm=Date.now()-gmArm<5000;$("gpsMissOk").textContent=(arm?"Confirmer ≈ ":"Saisir ≈ ")+hm(gm.t);$("gpsMissOk").style.fontWeight=arm?"700":"";}if(show)$("gpsMissTxt").innerHTML="D'après le GPS (km "+gm.km.toFixed(1)+"), tu as passé <b>"+pts[gm.n][0]+"</b> (km "+pts[gm.n][1].toFixed(1)+") sans pointer. Temps estimé à ce point : <b>≈ "+hm(gm.t)+"</b>. Vérifie avec ta montre.";}
+  if(last){
+    const A=E[last],P=pts[last][2],d=A-P,r=A/P;let rr=r;let pj=last-1;if(!(pj>0&&E[pj]==null)){while(pj>0&&P-pts[pj][2]<30&&(pj-1===0||E[pj-1]!=null))pj--;if(P-pts[pj][2]>=30){const rs=Math.min(1.2,Math.max(0.85,(A-(pj?E[pj]:0))/(P-pts[pj][2])));rr=0.6*r+0.4*rs;}}reff=1+((rr>1?rr:1-(1-rr)*0.5)-1)*Math.min(1,P/T);const c=clsT(A,P);
+    $("delta").textContent=Math.round(d)===0?"0":(d>0?"+":"−")+Math.abs(Math.round(d));$("delta").className="delta num "+c;$("hero").className="hero "+c;
+    {const pc=Math.round((r-1)*100);$("state").innerHTML=(Math.round(d)>0?"min de retard":Math.round(d)<0?"min d'avance":"Pile dans le plan")+" à "+pts[last][0]+(pc?` <span class="pc">· ${pc>0?"+":"−"}${Math.abs(pc)} %</span>`:"");}
+    const fin=last===pts.length-1,ga=fin?null:gpsArr(cur,s,pts,last,T),proj=fin?A:ga?ga.proj:A+(T-P)*reff;$("projLbl").textContent=fin?"Temps final":ga?"Arrivée estimée (GPS "+ga.hh+")":"Arrivée estimée";
+    $("projT").innerHTML=hm(proj)+`<span class="pd ${clsT(proj,T)}">${dmin(proj-T)}</span><small>${clock(st+proj)}</small>`;window._arr={proj:proj,T:T,fin:fin,gps:ga?ga.hh:null,gts:ga?ga.ts:null};
+    // « À ce rythme » : temps final si l'écart actuel au plan (en %) est gardé jusqu'au bout ; masqué à moins de 5 min de l'arrivée estimée.
+    {const rv=ga?T*ga.el/ga.P:T*A/P,show=!fin&&Math.abs(Math.round(rv)-Math.round(proj))>=5;$("rythme").hidden=!show;if(show)$("rythmeT").textContent=hm(rv);}
+    if(!fin){const n=last+1,en=anc?anc.W+(pts[n][2]-anc.P)*reff:A+(pts[n][2]-P)*reff;$("nextTop").innerHTML='Prochain point · km '+pts[n][1].toFixed(1)+'<span id="nextIn"></span>';$("nextLbl").innerHTML=rvSvg(pts[n][7]||(n===pts.length-1?"f":""))+pts[n][0];$("nextH").innerHTML="≈ "+hm(en)+"<small>"+clock(st+en)+"</small>";}
+    else{$("nextTop").textContent="";$("nextLbl").textContent="Course terminée";$("nextH").textContent="Bravo";}
+  }else{
+    $("projLbl").textContent="Arrivée estimée";$("delta").textContent="–";$("delta").className="delta num";$("hero").className="hero";
+    // Avant le premier pointage : départ à l'heure théorique, modifiable (champ « Heure de départ » ou « Je pars »), recalé au premier pointage.
+    const ga0=gpsArr(cur,s,pts,0,T),arm=Date.now()-stArm<5000;
+    // Boutons « Je pars » / « Annuler » : masqués 30 min après le départ (avant, toujours visibles).
+    const btn=stBtnOn(s);window._stBtn=btn;
+    if(stPend)$("state").innerHTML=`Nouvelle heure de départ <b>${stPend}</b> ? <button type="button" class="now confirm" id="okStart">Confirmer</button> <button type="button" class="clear" id="noStart">Annuler</button>`;
+    // Deux colonnes : à gauche l'heure de départ et « recalé au 1er pointage » dessous, à droite le bouton (pouce de la main droite).
+    else{const warn=ga0&&ga0.bad?`<b class="dv-r">Heure de départ à vérifier</b> : d'après le GPS, ${s.start} ne colle pas. Corrige-la ci-dessous.`:"",
+      lab=s.t0?`Départ à ${s.start}`:`Départ ${s.startSet?"":"prévu "}${s.start}`,
+      b2=btn?(s.t0?`<button type="button" class="clear${arm?" armed":""}" id="undoStart">${arm?"Confirmer l'annulation":"Annuler"}</button>`:`<button type="button" class="now" id="goStart">Je pars</button>`):"";
+      $("state").innerHTML=(warn?`<span class="stw">${warn}</span>`:"")+`<span class="st2"><span class="stl">${lab}<small>recalé au 1er pointage</small></span>${b2}</span>`;}
+    {const ga=ga0&&!ga0.bad?ga0:null;if(ga){$("projLbl").textContent="Arrivée estimée (GPS "+ga.hh+")";$("projT").innerHTML=hm(ga.proj)+`<span class="pd ${clsT(ga.proj,T)}">${dmin(ga.proj-T)}</span><small>${clock(st+ga.proj)}</small>`;window._arr={proj:ga.proj,T:T,fin:false,gps:ga.hh,gts:ga.ts};}
+     else $("projT").innerHTML=hm(T)+"<small>"+clock(st+T)+"</small>";}
+    $("rythme").hidden=true;
+    $("nextTop").innerHTML='Prochain point · km '+pts[1][1].toFixed(1);$("nextLbl").innerHTML=rvSvg(pts[1][7])+pts[1][0];{const an=ga0&&ga0.bad?null:anc,en=an?an.W+(pts[1][2]-an.P):pts[1][2];$("nextH").innerHTML=hm(en)+"<small>"+clock(st+en)+"</small>";}
+  }
+  if(msg)$("state").textContent=msg;
+  const ol=$("list");ol.innerHTML="";
+  pts.forEach((p,i)=>{if(!i)return;
+    const planT=p[2],q=pts[i-1],segP=planT-q[2];
+    const nf=n=>n.toLocaleString("fr-FR");
+    let est="",aEst=null;
+    if(last&&i>last){const a=(anc&&i===last+1)?anc.W+(planT-anc.P)*reff:E[last]+(planT-pts[last][2])*reff;aEst=a;const prevA=(i-1===last)?E[last]:E[last]+(q[2]-pts[last][2])*reff;
+      est=`<div class="est">Estimé : section <b>${hm(a-prevA)}</b> · temps course <b>${hm(a)}</b> (${clock(st+a)})</div>`;}
+    // Points d'eau sans pointage (information pour moi seulement, pas envoyée aux spectateurs)
+    (R.wp||[]).filter(w=>w[1]>q[1]&&w[1]<p[1]).forEach(w=>{
+      const W=s.w||{},ok=W[w[1]]!=null,tp=q[2]+(w[1]-q[1])/(p[1]-q[1])*(p[2]-q[2]),tw=(anc&&i===last+1&&w[1]>anc.km)?anc.W+(tp-anc.P)*reff:(last?E[last]+(tp-pts[last][2])*reff:tp),elw=last?elapsedNow(st,E[last],s.t0):null,passed=ok||last>=i||(elw!=null&&tw<elw-10);
+      const t=(anc&&i===last+1&&w[1]>anc.km)?anc.W+(tp-anc.P)*reff:(last?E[last]+(tp-pts[last][2])*reff:tp);
+      const wl=document.createElement("li");wl.className="wp"+(passed?" done":"");wl.dataset.next=(!passed&&i===last+1)?"1":"";if(!passed&&last)wl.dataset.tw=String(tw);
+      wl.innerHTML=`${rvSvg("w")}<span><b>${w[2]}</b> · ${w[0]} · km ${w[1].toFixed(1)}${passed?"":`<span class="wpt"> · <span class="nw">${last?"≈ ":""}${hm(t)} (${clock(st+t)})</span></span>`}<small>${ok?`Passé à ${clock(st+W[w[1]])} · <button class="clear" type="button" data-wpu="${w[1]}">Annuler</button>`:""}</small>${!passed&&i===last+1?`<button class="wpok" type="button" data-wp="${w[1]}">Valider le passage</button>`:""}</span>`;
+      ol.appendChild(wl);});
+    const li=document.createElement("li");li.className="pt"+(E[i]!=null?" done "+clsT(E[i],planT):"")+(i===last+1?" next":"");
+    li.innerHTML=`<div class="row1"><span class="name">${rvIcon(p[7]||(i===pts.length-1?"f":""))}${p[0]}</span><span class="km">km ${p[1].toFixed(1)}<span class="cum">+${nf(p[3])} / −${nf(p[4])} m</span></span></div>
+      <div class="brief">Cible <b>${hm(planT)}</b> (${clock(st+planT)})${aEst!=null?` · estimé <b>${hm(aEst)}</b>`:""}${E[i]!=null?trendPill(i,E,pts):""}</div>
+      <div class="entry"><input class="el" type="text" inputmode="numeric" enterkeyhint="done" autocomplete="off" placeholder="ex. ${tapeTxt(planT)}" aria-label="Temps de course à ${p[0]}, par exemple ${tapeTxt(planT)} pour ${hm(planT)}, ton temps cible" value="${E[i]!=null?hm(E[i]):""}" data-i="${i}"${E[i]!=null?" readonly":""}>
+      ${E[i]!=null?`<button class="now edit" type="button" data-ed="${i}">Modifier</button>`:`<button class="now" type="button" data-ok="${i}">Valider</button>`}
+      <details class="more"><summary>Détails</summary>
+      <div class="plan"><span>Section ${(p[1]-q[1]).toFixed(1)} km · <b class="${dvc(p[3]-q[3],p[1]-q[1])}">+${nf(p[3]-q[3])}</b> / <b class="${dvc(p[4]-q[4],p[1]-q[1])}">−${nf(p[4]-q[4])}</b> m${p[5]?` · <span class="fac ${p[5]>=1.05?"hard":p[5]<=0.95?"easy":""}">terrain ×${p[5].toFixed(2)}</span>`:""}</span></div>
+      <div class="plan"><span>Plan : section <b>${hm(segP)}</b> · temps course <b>${hm(planT)}</b> (${clock(st+planT)})</span><span>Fourchette : section <span class="nw">${hm(segP*.95)}–${hm(segP*1.05)}</span> · course <span class="nw">${hm(planT*.95)}–${hm(planT*1.05)}</span></span></div>
+      ${est}</details>${E[i]!=null?`<button class="clear" type="button" data-c="${i}">Effacer</button><span class="res"><span class="${clsT(E[i],planT)}">Course ${dmin(E[i]-planT)}</span>${segDiff(i,E,pts)}</span>`:""}</div>`;
+    ol.appendChild(li);});
+  band(R,st);
+  loadTR(cur);
+  const pp=last?{last:last,T:T,reff:reff,A:E[last],P:pts[last][2],fin:last===pts.length-1,anc:anc}:{last:0,T:T,reff:1,A:0,P:0,anc:anc};
+  LIVE={anc:anc,W:s.w||{},R:R,E:E,st:st,last:last,reff:reff,T:T,pp:pp,S:{pts:pts,e:E,start:s.start,wp:R.wp||[]},el:null,t0:s.t0||null};
+  live();
+}
+function tapeTxt(m){m=Math.round(m);return m<60?String(m):Math.floor(m/60)+String(m%60).padStart(2,"0");}
+// Tronçon : chiffre et couleur comparés au plan.
+// Tendance : tronçon comparé à l'allure moyenne connue au pointage précédent (temps de course / temps du plan à ce point).
+// Pas de tendance sur la première section ni sur les sections de moins de 10 min au plan.
+function trendOf(i,E,pts){const j=i-1;if(j<1||E[j]==null||E[i]==null)return null;const a=E[i]-E[j],p=pts[i][2]-pts[j][2];if(p<10)return null;
+  const q=a/(p*E[j]/pts[j][2]);return q<0.95?{k:"up",s:"▲",w:"accélère"}:q<=1.05?{k:"eq",s:"=",w:"allure tenue"}:q<=1.10?{k:"dn",s:"▼",w:"ralentit"}:{k:"dd",s:"▼▼",w:"ralentit fort"};}
+function segDiff(i,E,pts){const j=i-1;if(j>0&&E[j]==null)return "";const a=E[i]-(j?E[j]:0),p=pts[i][2]-pts[j][2];
+  return `<span class="${clsT(a,p)}">Section ${dmin(a-p)}</span>`;}
+// Pastille de tendance, affichée au bout de la ligne « Cible » d'un pointage validé (ne rallonge pas la carte).
+function trendPill(i,E,pts){const tr=trendOf(i,E,pts);return tr?`<span class="trp tr-${tr.k}">${tr.s} ${tr.w}</span>`:"";}
+function segTxt(i,E,pts){let j=i-1;while(j>0&&E[j]==null)j--;const a=E[i]-(j?E[j]:0),p=pts[i][2]-pts[j][2];
+  return `<div class="seg">Section ${hm(a)} au lieu de ${hm(p)} (${dmin(a-p)})</div>`;}
+function band(R,st){let h=`<h2>${R.name} – départ ${clock(st)}</h2><table><tr><th>Point</th><th>Km</th><th>D+/D− section</th><th>Plan</th><th>Heure</th><th>Fourchette</th></tr>`;
+  R.pts.forEach((p,i)=>{if(i)h+=`<tr><td>${p[0]}</td><td>${p[1].toFixed(1)}</td><td>+${p[3]-R.pts[i-1][3]} / −${p[4]-R.pts[i-1][4]}</td><td>${hm(p[2])}</td><td>${clock(st+p[2])}</td><td>${hm(p[2]*.95)}–${hm(p[2]*1.05)}</td></tr>`;});
+  $("band").innerHTML=h+"</table>";}
+let relockT=null,pendingHi=null,pendingT=null,pendingAt=0;
+function armRelock(inp){clearTimeout(relockT);relockT=setTimeout(()=>{if(document.body.contains(inp)&&!inp.readOnly)render();},4000);}
+$("list").addEventListener("input",e=>{if(e.target.matches("input.el")&&relockT&&e.target.dataset.i){const li=e.target.closest("li");if(li&&li.classList.contains("done"))armRelock(e.target);}});
+function commit(i,raw,fromGps){
+  clearTimeout(relockT);
+  const s=state(),v=parseEl(raw);
+  if(v===null){render();return;}
+  if(isNaN(v)){render("Temps non reconnu : tape par exemple 152 pour 1h52.");return;}
+  {const pl=RACES[cur].pts[i][2];const pw=RACES[cur].pts[i][6],lo=pw!=null?pw:pl*0.75,hi=pl*(1.2+0.015*pl/60);if(v<lo){render(`Temps impossible à ${RACES[cur].pts[i][0]} : plus rapide que le vainqueur (${hm(lo)}). Vérifie la saisie.`);return;}
+  // Temps très lent, ou modification d'un temps déjà validé : il faut un second appui volontaire
+  // (au moins 0.8 s après l'alerte, pour qu'un double envoi du clavier ne vaille pas confirmation).
+  const old0=s.e[i],modif=old0!=null&&v!==old0,slow=v>hi;if(modif||slow){
+    if(pendingHi===i+":"+v&&Date.now()-pendingAt<800)return;
+    if(pendingHi!==i+":"+v){pendingHi=i+":"+v;pendingAt=Date.now();clearTimeout(pendingT);pendingT=setTimeout(()=>{pendingHi=null;render();},8000);
+      const nm=RACES[cur].pts[i][0],msg=modif?`Remplacer ${hm(old0)} par ${hm(v)} à ${nm} ?`+(slow?` C'est très au-dessus du plan (${hm(pl)}).`:"")+" Appuie sur Confirmer.":`${hm(v)} à ${nm}, c'est très au-dessus du plan (${hm(pl)}). Si c'est bien ton temps, appuie sur Confirmer.`;
+      $("state").textContent=msg;$("state").classList.add("warn");const bt=document.querySelector(`button[data-ok="${i}"]`);if(bt){bt.textContent="Confirmer";bt.classList.add("confirm");
+        const ent=bt.closest(".entry");if(ent){const old=ent.parentNode.querySelector(".hiwarn");if(old)old.remove();ent.insertAdjacentHTML("afterend",`<div class="wpwarn hiwarn">${msg}</div>`);}}
+      return;}}
+  pendingHi=null;}
+  for(const [k,x] of Object.entries(s.e)){const kk=+k;if((kk<i&&x>=v)||(kk>i&&x<=v)){render("Ce temps n'est pas cohérent avec les autres pointages (il doit être plus long qu'au point précédent et plus court qu'au suivant) : vérifie la saisie.");return;}}
+  const ks=Object.keys(s.e).map(Number),first=ks.length===0,old=s.e[i];
+  // Correction du premier pointage : l'heure de passage reste la même, l'heure de départ est recalée d'autant.
+  const fixFirst=!first&&old!=null&&i===Math.min(...ks);
+  s.e[i]=v;
+  // Premier pointage manuel (temps lu sur la montre) : l'heure de départ est recalée dessus, même si elle avait été modifiée.
+  // Premier pointage suggéré par le GPS et accepté tel quel : il est calculé depuis l'heure de départ en cours, qui est donc gardée.
+  if(first&&fromGps){if(!s.t0)s.t0=Date.now()-elapsedNow(toMin(s.start),0,null)*60000;}
+  else if(first){const d=new Date();s.start=clock(d.getHours()*60+d.getMinutes()-v);s.t0=Date.now()-v*60000;s.startSet=false;}
+  else if(!s.startSet){if(fixFirst){s.start=clock(toMin(s.start)+old-v);if(s.t0)s.t0+=(old-v)*60000;}}
+  if(!save(s)){render("Impossible d'enregistrer ce temps sur ce téléphone (stockage bloqué, navigation privée ?). Ouvre le fichier dans ton navigateur habituel, hors navigation privée.");return;}
+  render();goNext(true);toastAfter(i);
+}
+// Message de 8 s après un pointage validé : temps, écart du tronçon au plan et tendance (la carte sort de l'écran avec le défilement).
+let toastT=null;
+// Mode jour / nuit : appui sur l'icône du coureur. Retour automatique au réglage du téléphone quand on revient au même mode que lui.
+function themeTap(){const sys=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light",curT=document.documentElement.dataset.theme||sys,next=curT==="dark"?"light":"dark";
+  if(next===sys){delete document.documentElement.dataset.theme;store.set("theme",null);}else{document.documentElement.dataset.theme=next;store.set("theme",next);}
+  hideToast();render();}
+function hideToast(){const el=document.getElementById("toast");if(el)el.hidden=true;clearTimeout(toastT);}
+function toastAfter(i){const pts=RACES[cur].pts,E=state().e,v=E[i];if(v==null)return;
+  const j=i-1,seg=j<1||E[j]!=null?"Section "+dmin(v-(j?E[j]:0)-(pts[i][2]-pts[j][2])):"Course "+dmin(v-pts[i][2]),tr=trendOf(i,E,pts);
+  let el=document.getElementById("toast");if(!el){el=document.createElement("div");el.id="toast";el.className="toast";el.setAttribute("role","status");el.addEventListener("click",hideToast);document.body.appendChild(el);}
+  el.innerHTML=`<b>✓ ${pts[i][0]}</b><span>${hm(v)} · ${seg}</span>`+(tr?`<span class="trp tr-${tr.k}">${tr.s} ${tr.w}</span>`:"");
+  el.hidden=false;clearTimeout(toastT);toastT=setTimeout(hideToast,8000);}
+Object.entries(RACES).forEach(([k,R])=>{const b=document.createElement("button");b.type="button";b.dataset.k=k;b.innerHTML=`${R.name}<small>${R.sub}</small>`;
+  b.onclick=()=>{hideToast();cur=k;store.set("race",k);render();showShare();setTimeout(()=>goNext(false),30);};$("tabs").appendChild(b);});
+if(KEYS.length<2){$("tabs").hidden=true;document.title=RACES[KEYS[0]].name+" – suivi";}
+// Clavier Android : si la touche « Suivant » saute à la case d'un autre pointage, le temps tapé est validé (et non perdu).
+document.addEventListener("focusout",e=>{const a=e.target,b=e.relatedTarget;
+  if(a&&a.matches&&a.matches("input.el")&&!a.readOnly&&a.value.trim()&&b&&b.matches&&b.matches("input.el")){b.blur();const i=+a.dataset.i,v=a.value;setTimeout(()=>commit(i,v),0);}});
+$("list").addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.matches("input.el")&&!e.target.readOnly){e.preventDefault();commit(+e.target.dataset.i,e.target.value);}});
+$("list").addEventListener("click",e=>{
+  if(e.target.dataset.wp){const km=+e.target.dataset.wp;if(wpCheck(km,e.target))return;wpMark(km,true);return;}
+  if(e.target.dataset.wpu){wpMark(+e.target.dataset.wpu,false);return;}
+  if(e.target.dataset.ok){const inp=e.target.parentNode.querySelector("input.el");commit(+e.target.dataset.ok,inp.value);}
+  if(e.target.dataset.ed){const btn=e.target,inp=btn.parentNode.querySelector("input.el");inp.readOnly=false;inp.select();inp.focus();
+    btn.textContent="Valider";btn.classList.remove("edit");btn.dataset.ok=btn.dataset.ed;delete btn.dataset.ed;armRelock(inp);}
+  if(e.target.dataset.c){const btn=e.target;
+    if(btn.dataset.armed!=="1"){btn.dataset.armed="1";btn.textContent="Confirmer l'effacement ?";btn.classList.add("armed");
+      clearTimeout(btn._t);btn._t=setTimeout(()=>{btn.dataset.armed="";btn.textContent="Effacer";btn.classList.remove("armed");},2000);return;}
+    hideToast();const s=state();delete s.e[btn.dataset.c];if(!Object.keys(s.e).length&&!s.startSet){s.start=RACES[cur].start;delete s.t0;}save(s);render();}});
+// Heure de départ modifiée avant le premier pointage : appliquée seulement après « Confirmer » (sinon annulée au bout de 8 s).
+$("start").addEventListener("change",e=>{const s=state(),v=e.target.value;if(Object.keys(s.e).length)return;
+  if(!v||v===s.start){stPend=null;render();return;}
+  stPend=v;stPendAt=Date.now();render();setTimeout(()=>{if(stPend&&Date.now()-stPendAt>=8000){stPend=null;render();}},8100);});
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("#okStart,#noStart");if(!b)return;
+  const s=state();if(b.id==="okStart"&&stPend&&!Object.keys(s.e).length){s.start=stPend;s.startSet=true;delete s.t0;delete s.g;delete s.gm;save(s);}
+  stPend=null;render();});
+// Mode jour / nuit : réglage du téléphone par défaut ; un appui sur l'icône du coureur le change (choix mémorisé, voir themeTap).
+try{const th=store.get("theme",null);if(th==="dark"||th==="light")document.documentElement.dataset.theme=th;}catch(e){} // aussi pour le fichier hors ligne (sans le script d'en-tête)
+const SHARE_RE=/^https:\/\/script\.google\.com\/[^\s?#]+\/exec$/;
+function shareUrl(){const u=store.get("shareUrl",null);return u===null?SHARE_DEFAULT:u;}
+function delKey(k){try{localStorage.removeItem(k);}catch(e){}}
+let shareBusy=false,shareRetryT=null,shareBlocked=false,shareErr=false,shareKeyErr=false;
+function jsonp(url,params,ms){return new Promise((res,rej)=>{
+  const cb="__sc"+Date.now().toString(36)+Math.floor(Math.random()*1e6),el=document.createElement("script");let done=false;
+  const fin=(err,data)=>{if(done)return;done=true;clearTimeout(t);window[cb]=function(){};el.remove();err?rej(err):res(data);};
+  const t=setTimeout(()=>fin(new Error("timeout")),ms||20000);
+  window[cb]=d=>fin(null,d);el.onerror=()=>fin(new Error("network"));
+  el.src=url+"?"+Object.entries(params).map(([k,v])=>k+"="+encodeURIComponent(v)).join("&")+"&callback="+cb;
+  document.head.appendChild(el);});}
+function sharePayload(k){const R=RACES[k],s=store.get("st2_"+k,null)||{start:R.start,e:{}};
+  const o={v:1,k:k,name:R.name,sub:R.sub,start:s.start,e:s.e,pts:R.pts,ts:Date.now()};
+  // Heure de départ réelle (horloge du téléphone au 1er pointage) : la page spectateur s'en sert pour la position estimée.
+  if(s.t0&&Object.keys(s.e||{}).length)o.t0=Math.round(s.t0);
+  // Dernière position GPS dans la section en cours : la page spectateur s'en sert comme repère (même calcul que l'outil de suivi).
+  {const g=s.g,l=lastOf(s,R.pts);if(g&&l&&g.n===l+1)o.g={km:g.km,n:g.n,el:g.el,ts:g.ts};}
+  return o;}
+function queueShare(k){if(!shareUrl())return;store.set("shareQ_"+k,sharePayload(k));flushShare();}
+async function flushShare(){
+  const url=shareUrl();
+  if(!url||shareBusy){showShare();return;}
+  const ks=KEYS.filter(k=>store.get("shareQ_"+k,null)&&!isAmb(k));
+  if(!ks.length){showShare();return;}
+  shareBusy=true;clearTimeout(shareRetryT);let again=false;
+  try{
+    for(const k of ks){
+      const q=store.get("shareQ_"+k,null);if(!q)continue;
+      const r=await jsonp(url,{action:"save",cle:SHARE_KEY,data:JSON.stringify(q)});
+      if(!r||!r.ok)throw new Error((r&&r.err)||"refus");
+      shareKeyErr=false;
+      const now=store.get("shareQ_"+k,null);
+      if(now&&now.ts===q.ts)delKey("shareQ_"+k);else again=true;
+      store.set("shareOk",Date.now());shareErr=false;
+    }
+  }catch(e){shareErr=true;if(e&&e.message==="cle")shareKeyErr=true;shareRetryT=setTimeout(flushShare,30000);}
+  finally{shareBusy=false;showShare();if(again)setTimeout(flushShare,0);}
+}
+function showShare(msg){
+  const url=shareUrl(),dot=$("sdot");
+  $("shareShow").textContent="Afficher « "+RACES[cur].name+" » aux spectateurs";if(!$("raceReset").classList.contains("armed"))$("raceReset").textContent="Remettre « "+RACES[cur].name+" » à zéro";$("shareShow").hidden=!url;
+  if(document.activeElement!==$("shareUrl"))$("shareUrl").value=url||"";
+  $("shareView").hidden=!url;if(url)$("shareView").href=url;
+  if(!url){dot.hidden=true;if(msg!==undefined)$("shareMsg").textContent=msg;return;}
+  dot.hidden=false;
+  const pend=KEYS.some(k=>store.get("shareQ_"+k,null)),ok=store.get("shareOk",null);
+  let t,c;
+  if(shareBlocked){c="wait";t="Envoi bloqué ici";}
+  else if(pend){c="wait";t="Envoi en attente";}
+  else if(ok){c="ok";t="Partagé "+clock(new Date(ok).getHours()*60+new Date(ok).getMinutes());}
+  else{c="";t="Partage";}
+  dot.className="sdot "+c;$("sdotTxt").textContent=t;
+  if(msg!==undefined)$("shareMsg").textContent=msg;
+  else if(shareBlocked)$("shareMsg").textContent="Cette version en ligne n'a pas le droit d'envoyer les temps : utilise le fichier téléchargé, qui contient déjà cette adresse.";
+  else if(pend&&shareKeyErr)$("shareMsg").textContent="Le script refuse l'envoi (clé non reconnue) : recolle le dernier script (page « Copier le script ») et redéploie en « Nouvelle version ». Nouvel essai automatique toutes les 30 secondes.";
+  else if(pend&&shareErr)$("shareMsg").textContent="Pas de réponse pour l'instant (réseau ou adresse). Nouvel essai automatique toutes les 30 secondes.";
+}
+document.addEventListener("securitypolicyviolation",e=>{if(/script\.google/.test(e.blockedURI||"")){shareBlocked=true;showShare();}});
+window.addEventListener("online",()=>flushShare());
+document.addEventListener("visibilitychange",()=>{if(!document.hidden){flushShare();wake();}});
+// Appui sur le bandeau du prochain point (ou du point d'eau) : recalcule tout à l'heure actuelle et ramène la liste dessus.
+// « Départ » : heure de départ réelle prise sur l'horloge du téléphone (recalée ensuite par le premier pointage), GPS activé.
+// « Je pars » : un seul appui (comme la saisie d'un temps). « Annuler » : deux appuis, « Annuler » puis « Confirmer l'annulation » dans les 5 s (contre un appui accidentel en courant).
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("#goStart,#undoStart");if(!b)return;
+  const s=state();if(Object.keys(s.e).length||!window._stBtn)return;
+  if(b.id==="undoStart"&&!(Date.now()-stArm<5000)){stArm=Date.now();render();setTimeout(()=>{if(stArm&&Date.now()-stArm>=5000){stArm=0;render();}},5100);return;}
+  stArm=0;
+  if(b.id==="goStart"){const d=new Date();s.start=clock(d.getHours()*60+d.getMinutes());s.t0=Date.now();}
+  else{delete s.t0;delete s.g;delete s.gm;if(!s.startSet)s.start=RACES[cur].start;}
+  store.set("st2_"+cur,s);render();if(b.id==="goStart")gpsWant(true);});
+$("hero").addEventListener("click",e=>{const nb=e.target.closest(".grid>div:nth-child(2), #wpBar");
+  // Appui sur l'arrivée estimée, en course : bascule temps restant / temps de course (et distance restante / km estimé sur le profil), choix mémorisé.
+  if(!nb){const ar=$("projT").parentNode;if(ar.contains(e.target)&&LIVE&&LIVE.el!=null&&!(LIVE.pp&&LIVE.pp.fin)){store.set("nextMode",store.get("nextMode","rest")==="race"?"rest":"race");render();const a2=$("projT").parentNode;a2.classList.add("flash");setTimeout(()=>a2.classList.remove("flash"),400);}return;}const w=nb.id==="wpBar";
+  render();const n2=w?$("wpBar"):document.querySelector("#hero .grid>div:nth-child(2)");if(n2){n2.classList.add("flash");setTimeout(()=>n2.classList.remove("flash"),400);}
+  goNext(true,w?'#list li.wp[data-next="1"]':'#list li.pt.next');});
+$("shareSave").addEventListener("click",()=>{
+  const u=$("shareUrl").value.trim();
+  if(!u){store.set("shareUrl","");KEYS.forEach(k=>delKey("shareQ_"+k));showShare("Partage désactivé.");return;}
+  if(!SHARE_RE.test(u)){showShare("Adresse non reconnue : elle doit commencer par https://script.google.com/ et se terminer par /exec.");return;}
+  store.set("shareUrl",u);$("shareUrl").blur();showShare("Adresse enregistrée. Test de la liaison…");testShare();});
+async function testShare(){
+  const url=shareUrl();if(!url){showShare("Enregistre d'abord l'adresse de ton script.");return;}
+  showShare("Test de la liaison…");
+  try{const r=await jsonp(url,{action:"ping",cle:SHARE_KEY},15000);
+    if(r&&r.ok&&r.cle!==true){showShare("Le script répond mais ne reconnaît pas la clé de ton outil : recolle le dernier script (page « Copier le script ») et redéploie en « Nouvelle version ».");return;}
+    if(r&&r.ok){shareBlocked=false;queueShare(cur);showShare("Liaison OK : "+RACES[cur].name+" est envoyée à la page spectateur.");}
+    else showShare("Le script a répondu, mais pas comme prévu : vérifie que tu as collé le bon code.");}
+  catch(e){showShare(shareBlocked?undefined:"Pas de réponse. Vérifie l'adresse, le réseau, et que le déploiement est en accès « Tout le monde ».");}}
+$("shareTest").addEventListener("click",testShare);
+// Remise à zéro de la course affichée (tests) : trois appuis, espacés d'au moins 0.8 s. Efface pointages, points d'eau validés et heure de départ déduite, puis prévient les spectateurs.
+$("raceReset").addEventListener("click",()=>{const b=$("raceReset"),R=RACES[cur],st=+(b.dataset.step||0);
+  if(st>0&&Date.now()-(b._at||0)<800)return;
+  if(st<2){b.dataset.step=st+1;b._at=Date.now();b.classList.add("armed");
+    b.textContent=st===0?"Confirmer : effacer tous les temps de « "+R.name+" » ? (1/2)":"Dernière confirmation : tout effacer ? (2/2)";
+    clearTimeout(b._t);b._t=setTimeout(()=>{b.dataset.step=0;b.classList.remove("armed");showShare();},4000);return;}
+  clearTimeout(b._t);b.dataset.step=0;b.classList.remove("armed");
+  if(isAmb(cur)){if(!ambClearOk())return;ambDone();}hideToast();save({start:R.start,startSet:false,e:{}});render();window.scrollTo(0,0);
+  showShare(shareUrl()?"« "+R.name+" » remise à zéro : tous les temps sont effacés, les spectateurs voient de nouveau le plan.":"« "+R.name+" » remise à zéro : tous les temps sont effacés sur ce téléphone.");});
+// Avertissement temps d'origine inconnue : le choix est mémorisé avec la liste actuelle des points, il ne revient pas.
+function ambDone(){AMB.delete(cur);delKey("amb_"+cur);store.set("lay_"+cur,RACES[cur].pts.map(p=>p[0]));}
+// Remise à zéro avec avertissement en cours : l'effacement doit d'abord être enregistré, sinon le blocage des envois est gardé.
+function ambClearOk(){const R=RACES[cur];if(store.set("st2_"+cur,{start:R.start,startSet:false,e:{}}))return true;
+  const m="Impossible d'effacer les temps sur ce téléphone (enregistrement bloqué, navigation privée ?). Rien n'est envoyé aux spectateurs. Ouvre le suivi dans ton navigateur habituel.";render();$("ambTxt").textContent=m;showShare(m);return false;}
+$("ambReset").addEventListener("click",()=>{const R=RACES[cur];if(!ambClearOk())return;ambDone();hideToast();save({start:R.start,startSet:false,e:{}});render();window.scrollTo(0,0);
+  showShare(shareUrl()?"« "+R.name+" » remise à zéro : tous les temps sont effacés, les spectateurs voient de nouveau le plan.":"« "+R.name+" » remise à zéro : tous les temps sont effacés sur ce téléphone.");});
+$("ambKeep").addEventListener("click",()=>{ambDone();queueShare(cur);render();});
+$("themeBtn").addEventListener("click",themeTap);
+// « Saisir » : enregistre directement le temps estimé (mêmes contrôles qu'une saisie : un temps très lent demande un second appui).
+// Pointage suggéré par le GPS (envoyé aux spectateurs) : « Saisir ≈ … » puis « Confirmer ≈ … » dans les 5 s.
+$("gpsMissOk").addEventListener("click",()=>{const s=state(),gm=s.gm;if(!gm)return;
+  if(!(Date.now()-gmArm<5000)){gmArm=Date.now();render();setTimeout(()=>{if(gmArm&&Date.now()-gmArm>=5000){gmArm=0;render();}},5100);return;}
+  gmArm=0;commit(gm.n,tapeTxt(gm.t),true);});
+// « Modifier » : met le temps estimé dans la case du point, à corriger avec la montre puis à valider.
+$("gpsMissGo").addEventListener("click",()=>{const s=state(),gm=s.gm;if(!gm)return;const li=document.querySelectorAll("#list li.pt")[gm.n-1];if(!li)return;
+  const inp=li.querySelector("input.el");li.scrollIntoView({block:"center"});if(inp&&!inp.readOnly){inp.value="";inp.focus();}});
+$("gpsMissNo").addEventListener("click",()=>{const s=state();if(s.gm){s.gi=s.gm.n;store.set("st2_"+cur,s);}render();});
+$("shareShow").addEventListener("click",()=>{if(!shareUrl()){showShare("Enregistre d'abord l'adresse de ton script.");return;}
+  queueShare(cur);showShare("« "+RACES[cur].name+" » va s'afficher sur la page spectateur (dès que l'envoi est passé).");});
+function slugify(t){return (t||"course").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"course";}
+async function download(){
+  const msg=t=>$("dlMsg").textContent=t, R=RACES[cur], one={};one[cur]=R;
+  const src=SRC0.replace(/\/\*R\*\/[\s\S]*?\/\*\/R\*\//,"/*R*/const RACES="+JSON.stringify(one)+";/*/R*/")
+    .replace(/\/\*S\*\/[\s\S]*?\/\*\/S\*\//,"/*S*/const SHARE_DEFAULT="+JSON.stringify(shareUrl()||"")+";/*/S*/");
+  const html='<!DOCTYPE html>\n<html lang="fr">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n<title>'+R.name.replace(/[<>]/g,"")+' – suivi</title>\n'
+    +'<link rel="preconnect" href="https://fonts.googleapis.com">\n<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">\n'
+    +STYLE0+'\n</head>\n<body>\n'+BODY0+'\n<script id="app">\n'+src+'\n<\/script>\n</body>\n</html>\n';
+  const filename="suivi-"+slugify(R.name)+".html";
+  const withShare=shareUrl()?" Le partage en direct y est déjà réglé.":"";
+  if(window.claude&&window.claude.use){
+    const dl=await window.claude.use("downloads");
+    if(dl){try{await dl.save({filename,data:html});msg("Fichier "+filename+" enregistré. Ouvre-le sur ton téléphone : il marche sans réseau."+withShare);}
+      catch(e){msg(e&&e.code==="declined"?"Téléchargement annulé.":e&&e.code==="rate_limited"?"Une demande est déjà ouverte, réessaie dans un instant.":"Le téléchargement n'est pas disponible ici.");}
+      return;}
+    msg("Le téléchargement n'est pas disponible dans cette vue.");return;
+  }
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([html],{type:"text/html"}));a.download=filename;document.body.appendChild(a);a.click();a.remove();
+  msg("Fichier "+filename+" téléchargé."+withShare);
+}
+$("dl").addEventListener("click",download);
+// Amène le prochain point juste sous le bloc figé (après une validation et à l'ouverture).
+function goNext(smooth,sel){const li=document.querySelector(sel||'#list li.wp[data-next="1"], #list li.pt.next');if(!li)return;
+  if(typeof fitStick==="function")fitStick();
+  const st=document.getElementById("stick"),h=st&&getComputedStyle(st).position==="sticky"?st.getBoundingClientRect().height:0;
+  const y=li.getBoundingClientRect().top+window.scrollY-h-8;window.scrollTo({top:Math.max(0,y),behavior:smooth?"smooth":"auto"});}
+render();
+showShare();
+flushShare();
+setTimeout(()=>goNext(false),50);
+</script>
+</body>
+</html>
+
+
+
