@@ -809,6 +809,9 @@ document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest
 try{const th=store.get("theme",null);if(th==="dark"||th==="light")document.documentElement.dataset.theme=th;}catch(e){} // aussi pour le fichier hors ligne (sans le script d'en-tête)
 const SHARE_RE=/^https:\/\/script\.google\.com\/[^\s?#]+\/exec$/;
 function shareUrl(){const u=store.get("shareUrl",null);return u===null?SHARE_DEFAULT:u;}
+// Lien de réglage « …/#s=adresse-du-script » : enregistre l'adresse sur ce téléphone puis l'efface de la barre d'adresse (elle n'est jamais dans le code publié).
+(function(){const m=/^#s=(.+)$/.exec(location.hash||"");if(!m)return;let u="";try{u=decodeURIComponent(m[1]);}catch(e){}
+  if(SHARE_RE.test(u))store.set("shareUrl",u);try{history.replaceState(null,"",location.pathname+location.search);}catch(e){}})();
 function delKey(k){try{localStorage.removeItem(k);}catch(e){}}
 let shareBusy=false,shareRetryT=null,shareBlocked=false,shareErr=false,shareKeyErr=false;
 function jsonp(url,params,ms){return new Promise((res,rej)=>{
