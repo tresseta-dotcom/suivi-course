@@ -242,6 +242,7 @@ li.pt .brief .trp{font-size:13.5px!important;padding:1px 9px}
 .stl{display:flex;flex-direction:column;line-height:1.2;min-width:0;white-space:nowrap}.stl small{font:500 13px Barlow,sans-serif;color:var(--muted);margin-top:3px}
 .st2 .now{flex:0 0 auto;white-space:nowrap;padding:10px 12px}.st2 .clear{flex:0 0 auto}
 .stw{display:block;margin-bottom:6px;font-size:14px}
+#brandName.pick{cursor:pointer;-webkit-tap-highlight-color:transparent}#brandName.pick::after{content:" ▾";font-size:.75em;color:var(--muted)}#brandName.pick.open::after{content:" ▴"}
 </style>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#13202B">
@@ -524,7 +525,7 @@ function gpsUse(lat,lon,acc,ts){const R=RACES[cur],pts=R.pts,s=state(),E=s.e,las
     s.gm={n:n,t:Math.max(A0+1,Math.round(el-(Pk-q[2])*reff)),km:+km.toFixed(2)};delete s.g;}
   else{delete s.gm;s.g={km:+Math.min(km,pts[n][1]-0.05).toFixed(2),n:n,el:+el.toFixed(1),ts:ts,acc:Math.round(acc),dd:Math.round(b.d)};}
   store.set("st2_"+cur,s);
-  if(last&&s.g&&(GPS.shKm==null||Math.abs(s.g.km-GPS.shKm)>=0.2||ts-GPS.shTs>=300000)){GPS.shKm=s.g.km;GPS.shTs=ts;queueShare(cur);}
+  if(s.g&&(GPS.shKm==null||Math.abs(s.g.km-GPS.shKm)>=0.2||ts-GPS.shTs>=300000)){GPS.shKm=s.g.km;GPS.shTs=ts;queueShare(cur);}
   if(typingNow())gpsSt();else render();}
 function gpsTxt(s){const g=s.g,last=lastOf(s,RACES[cur].pts);if(GPS.st)return " · "+GPS.st;if(g&&g.n===last+1){const d=new Date(g.ts);return " · GPS "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");}return "";}
 function gpsSt(){const s=state();$("brandDep").textContent=(Object.keys(s.e).length||s.t0?"départ ":"départ prévu ")+s.start+gpsTxt(s);}
@@ -567,6 +568,10 @@ function wpAnchor(R,s,last){const pts=R.pts,W=s.w||{};if(last>=pts.length-1)retu
 const GPS_ARR_AGE=5*60000,GPS_ARR_ACC=60;
 var stArm=0,gmArm=0; // instants du premier appui sur « Annuler » (départ) et sur « Saisir ≈ … »
 var stPend=null,stPendAt=0;
+let tabsShow=false; // onglets réaffichés à la demande pendant la course
+// Course en cours : départ donné (« Je pars ») ou temps saisis autour du jour de la course, et arrivée pas encore pointée.
+function inRace(s){const pts=RACES[cur].pts,now=Date.now(),D=36*3600e3;if(s.e[pts.length-1]!=null)return false;
+  if(s.t0&&now-s.t0<D)return true;if(Object.keys(s.e).length){const a=startAbs(s);return a==null||Math.abs(now-a)<D;}return false;}
 const START_BTN_MAX=30;
 // Date et heure réelles du départ (jour de la course + heure de départ affichée), si la date de la course est connue.
 function startAbs(s){const r=RACES[cur];if(!r||!r.date||!/^\d{4}-\d\d-\d\d$/.test(r.date))return null;const [y,mo,d]=r.date.split("-").map(Number);
@@ -655,6 +660,8 @@ function render(msg){
   $("state").classList.remove("warn");
   const R=RACES[cur],s=state(),pts=R.pts,E=s.e,st=toMin(s.start);
   $("brandName").textContent=R.name;
+  // Course du jour en cours : onglets des autres courses masqués (gain de place) ; un appui sur le nom de la course les fait revenir.
+  {const hide=KEYS.length<2||(inRace(s)&&!tabsShow);$("tabs").hidden=hide;$("brandName").classList.toggle("pick",KEYS.length>1&&inRace(s));$("brandName").classList.toggle("open",tabsShow);}
   {const aw=$("ambWarn"),amb=isAmb(cur);aw.hidden=!amb;if(amb)$("ambTxt").textContent="Des temps de test d'une ancienne version de « "+R.name+" » ont été trouvés : ils peuvent être décalés d'un point (la liste des points a changé). Rien n'est envoyé aux spectateurs tant que tu n'as pas choisi.";}
   $("tabs").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.k===cur));
   if(Object.keys(E).length)stPend=null;
@@ -783,8 +790,9 @@ function toastAfter(i){const pts=RACES[cur].pts,E=state().e,v=E[i];if(v==null)re
   el.innerHTML=`<b>✓ ${pts[i][0]}</b><span>${hm(v)} · ${seg}</span>`+(tr?`<span class="trp tr-${tr.k}">${tr.s} ${tr.w}</span>`:"");
   el.hidden=false;clearTimeout(toastT);toastT=setTimeout(hideToast,8000);}
 Object.entries(RACES).forEach(([k,R])=>{const b=document.createElement("button");b.type="button";b.dataset.k=k;b.innerHTML=`${R.name}<small>${R.sub}</small>`;
-  b.onclick=()=>{hideToast();cur=k;store.set("race",k);render();showShare();setTimeout(()=>goNext(false),30);};$("tabs").appendChild(b);});
+  b.onclick=()=>{hideToast();tabsShow=false;cur=k;store.set("race",k);render();showShare();setTimeout(()=>goNext(false),30);};$("tabs").appendChild(b);});
 if(KEYS.length<2){$("tabs").hidden=true;document.title=RACES[KEYS[0]].name+" – suivi";}
+$("brandName").addEventListener("click",()=>{if(!$("brandName").classList.contains("pick"))return;tabsShow=!tabsShow;render();});
 // Clavier Android : si la touche « Suivant » saute à la case d'un autre pointage, le temps tapé est validé (et non perdu).
 document.addEventListener("focusout",e=>{const a=e.target,b=e.relatedTarget;
   if(a&&a.matches&&a.matches("input.el")&&!a.readOnly&&a.value.trim()&&b&&b.matches&&b.matches("input.el")){b.blur();const i=+a.dataset.i,v=a.value;setTimeout(()=>commit(i,v),0);}});
@@ -824,10 +832,10 @@ function jsonp(url,params,ms){return new Promise((res,rej)=>{
   document.head.appendChild(el);});}
 function sharePayload(k){const R=RACES[k],s=store.get("st2_"+k,null)||{start:R.start,e:{}};
   const o={v:1,k:k,name:R.name,sub:R.sub,start:s.start,e:s.e,pts:R.pts,ts:Date.now()};
-  // Heure de départ réelle (horloge du téléphone au 1er pointage) : la page spectateur s'en sert pour la position estimée.
-  if(s.t0&&Object.keys(s.e||{}).length)o.t0=Math.round(s.t0);
+  // Heure de départ réelle (« Je pars », ou horloge du téléphone au 1er pointage) : la page spectateur s'en sert pour la position estimée dès le départ.
+  if(s.t0)o.t0=Math.round(s.t0);
   // Dernière position GPS dans la section en cours : la page spectateur s'en sert comme repère (même calcul que l'outil de suivi).
-  {const g=s.g,l=lastOf(s,R.pts);if(g&&l&&g.n===l+1)o.g={km:g.km,n:g.n,el:g.el,ts:g.ts};}
+  {const g=s.g,l=lastOf(s,R.pts);if(g&&g.n===l+1)o.g={km:g.km,n:g.n,el:g.el,ts:g.ts};}
   return o;}
 function queueShare(k){if(!shareUrl())return;store.set("shareQ_"+k,sharePayload(k));flushShare();}
 async function flushShare(){
@@ -880,7 +888,7 @@ document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest
   stArm=0;
   if(b.id==="goStart"){const d=new Date();s.start=clock(d.getHours()*60+d.getMinutes());s.t0=Date.now();}
   else{delete s.t0;delete s.g;delete s.gm;if(!s.startSet)s.start=RACES[cur].start;}
-  store.set("st2_"+cur,s);render();if(b.id==="goStart")gpsWant(true);});
+  store.set("st2_"+cur,s);queueShare(cur);render();if(b.id==="goStart")gpsWant(true);});
 $("hero").addEventListener("click",e=>{const nb=e.target.closest(".grid>div:nth-child(2), #wpBar");
   // Appui sur l'arrivée estimée, en course : bascule temps restant / temps de course (et distance restante / km estimé sur le profil), choix mémorisé.
   if(!nb){const ar=$("projT").parentNode;if(ar.contains(e.target)&&LIVE&&LIVE.el!=null&&!(LIVE.pp&&LIVE.pp.fin)){store.set("nextMode",store.get("nextMode","rest")==="race"?"rest":"race");render();const a2=$("projT").parentNode;a2.classList.add("flash");setTimeout(()=>a2.classList.remove("flash"),400);}return;}const w=nb.id==="wpBar";
