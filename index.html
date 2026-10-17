@@ -665,7 +665,7 @@ function render(msg){
   {const aw=$("ambWarn"),amb=isAmb(cur);aw.hidden=!amb;if(amb)$("ambTxt").textContent="Des temps de test d'une ancienne version de « "+R.name+" » ont été trouvés : ils peuvent être décalés d'un point (la liste des points a changé). Rien n'est envoyé aux spectateurs tant que tu n'as pas choisi.";}
   $("tabs").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.k===cur));
   if(Object.keys(E).length)stPend=null;
-  $("start").value=stPend||s.start;$("startHint").textContent="(recalée au 1er pointage)";document.querySelector(".start").hidden=Object.keys(E).length>0;
+  $("start").value=stPend||s.start;$("startHint").textContent="(recalée au 1er pointage)";document.querySelector(".start").hidden=Object.keys(E).length>0||!!s.t0; // masqué dès « Je pars » (revient si on annule)
   let last=0;for(let i=1;i<pts.length;i++)if(E[i]!=null)last=i;window._arr=null;
   $("brandDep").textContent=(Object.keys(E).length||s.t0?"départ ":"départ prévu ")+s.start+gpsTxt(s);
   const T=pts[pts.length-1][2];$("goal").textContent=hm(T);
