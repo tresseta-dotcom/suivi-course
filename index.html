@@ -242,6 +242,7 @@ li.pt .brief .trp{font-size:13.5px!important;padding:1px 9px}
 .stl{display:flex;flex-direction:column;line-height:1.2;min-width:0;white-space:nowrap}.stl small{font:500 13px Barlow,sans-serif;color:var(--muted);margin-top:3px}
 .st2 .now{flex:0 0 auto;white-space:nowrap;padding:10px 12px}.st2 .clear{flex:0 0 auto}
 .stw{display:block;margin-bottom:6px;font-size:14px}
+.share button#shareShow.armed{background:var(--ink);color:var(--card);border-color:var(--ink);font-weight:600}
 #brandName.pick{cursor:pointer;-webkit-tap-highlight-color:transparent}#brandName.pick::after{content:" ▾";font-size:.75em;color:var(--muted)}#brandName.pick.open::after{content:" ▴"}
 </style>
 <link rel="manifest" href="manifest.webmanifest">
@@ -288,7 +289,7 @@ if("serviceWorker" in navigator&&(location.protocol==="https:"||location.hostnam
   <div class="dl"><button type="button" id="dl">Télécharger cette course (hors ligne)</button><div class="k" id="dlMsg" role="status"></div></div>
   <details class="share" id="shareBox">
     <summary>Partage en direct</summary>
-    <p>Colle ici l'adresse de ton script Google (elle se termine par /exec). Chaque temps validé, modifié ou effacé est alors envoyé à la page spectateur. Sans réseau, les temps sont gardés et renvoyés automatiquement dès que le réseau revient. Une course terminée reste affichée aux spectateurs jusqu'à ce que tu en affiches une autre avec le bouton ci-dessous, ou au plus tard 3 jours avant la course suivante. « Remettre … à zéro » (trois appuis) efface tous les temps de la course affichée sur ce téléphone et chez les spectateurs : pratique pour nettoyer tes tests avant le départ.</p>
+    <p>Colle ici l'adresse de ton script Google (elle se termine par /exec). Chaque temps validé, modifié ou effacé est alors envoyé à la page spectateur. « Tester la liaison » vérifie seulement que ton script répond, sans rien changer pour les spectateurs. Sans réseau, les temps sont gardés et renvoyés automatiquement dès que le réseau revient. Une course terminée reste affichée aux spectateurs jusqu'à ce que tu en affiches une autre avec le bouton ci-dessous (deux appuis), ou au plus tard 3 jours avant la course suivante. « Remettre … à zéro » (trois appuis) efface tous les temps de la course affichée sur ce téléphone et chez les spectateurs : pratique pour nettoyer tes tests avant le départ.</p>
     <input type="url" id="shareUrl" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off" spellcheck="false" aria-label="Adresse du script Google">
     <div class="srow"><button type="button" id="shareSave">Enregistrer</button><button type="button" id="shareTest">Tester la liaison</button><button type="button" id="shareShow">Afficher cette course aux spectateurs</button><button type="button" id="raceReset" class="reset">Remettre cette course à zéro</button><a id="shareView" target="_blank" rel="noopener" hidden>Ouvrir la page spectateur</a></div>
     <div class="k" id="shareMsg" role="status"></div>
@@ -859,7 +860,7 @@ async function flushShare(){
 }
 function showShare(msg){
   const url=shareUrl(),dot=$("sdot");
-  $("shareShow").textContent="Afficher « "+RACES[cur].name+" » aux spectateurs";if(!$("raceReset").classList.contains("armed"))$("raceReset").textContent="Remettre « "+RACES[cur].name+" » à zéro";$("shareShow").hidden=!url;
+  if(!$("shareShow").classList.contains("armed"))$("shareShow").textContent="Afficher « "+RACES[cur].name+" » aux spectateurs";if(!$("raceReset").classList.contains("armed"))$("raceReset").textContent="Remettre « "+RACES[cur].name+" » à zéro";$("shareShow").hidden=!url;
   if(document.activeElement!==$("shareUrl"))$("shareUrl").value=url||"";
   $("shareView").hidden=!url;if(url)$("shareView").href=url;
   if(!url){dot.hidden=true;if(msg!==undefined)$("shareMsg").textContent=msg;return;}
@@ -904,7 +905,8 @@ async function testShare(){
   showShare("Test de la liaison…");
   try{const r=await jsonp(url,{action:"ping",cle:SHARE_KEY},15000);
     if(r&&r.ok&&r.cle!==true){showShare("Le script répond mais ne reconnaît pas la clé de ton outil : recolle le dernier script (page « Copier le script ») et redéploie en « Nouvelle version ».");return;}
-    if(r&&r.ok){shareBlocked=false;queueShare(cur);showShare("Liaison OK : "+RACES[cur].name+" est envoyée à la page spectateur.");}
+    // Test seul : vérifie le script sans rien changer pour les spectateurs (envoie seulement les temps déjà en attente).
+    if(r&&r.ok){shareBlocked=false;flushShare();showShare("Liaison OK : ton script répond. Rien n'a changé pour les spectateurs.");}
     else showShare("Le script a répondu, mais pas comme prévu : vérifie que tu as collé le bon code.");}
   catch(e){showShare(shareBlocked?undefined:"Pas de réponse. Vérifie l'adresse, le réseau, et que le déploiement est en accès « Tout le monde ».");}}
 $("shareTest").addEventListener("click",testShare);
@@ -935,7 +937,12 @@ $("gpsMissOk").addEventListener("click",()=>{const s=state(),gm=s.gm;if(!gm)retu
 $("gpsMissGo").addEventListener("click",()=>{const s=state(),gm=s.gm;if(!gm)return;const li=document.querySelectorAll("#list li.pt")[gm.n-1];if(!li)return;
   const inp=li.querySelector("input.el");li.scrollIntoView({block:"center"});if(inp&&!inp.readOnly){inp.value="";inp.focus();}});
 $("gpsMissNo").addEventListener("click",()=>{const s=state();if(s.gm){s.gi=s.gm.n;store.set("st2_"+cur,s);}render();});
+// Change la course vue par les spectateurs : deux appuis (le second dans les 5 s), contre un appui par erreur.
 $("shareShow").addEventListener("click",()=>{if(!shareUrl()){showShare("Enregistre d'abord l'adresse de ton script.");return;}
+  const b=$("shareShow");
+  if(!b.classList.contains("armed")||Date.now()-(b._at||0)<400){if(b.classList.contains("armed"))return;b.classList.add("armed");b._at=Date.now();b.textContent="Confirmer : montrer « "+RACES[cur].name+" » aux spectateurs ?";
+    clearTimeout(b._t);b._t=setTimeout(()=>{b.classList.remove("armed");showShare();},5000);return;}
+  clearTimeout(b._t);b.classList.remove("armed");
   queueShare(cur);showShare("« "+RACES[cur].name+" » va s'afficher sur la page spectateur (dès que l'envoi est passé).");});
 function slugify(t){return (t||"course").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"course";}
 async function download(){
