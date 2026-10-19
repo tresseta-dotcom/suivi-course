@@ -559,7 +559,9 @@ function wpLive(){const bar=$("wpBar"),grid=bar.parentNode,ni=$("nextIn");const 
   bar.hidden=false;grid.classList.add("haswp");
   bar.className="wpbar m";bar.innerHTML=`<span class="lb">${w.lab} · km ${w.km.toFixed(1)}${el!=null?lbT(w.tt):""}</span><div class="lf">${rvSvg("w")}<b>${w.name}</b></div><div class="vv">${el!=null&&rest?cdH(w.tt):rcH(w.tt)}</div>`;}
 // Point d'eau validé : temps de course modifiable (« Modifier », case vide, temps de la montre comme pour un pointage).
-let wpEdit=null,wpErr="";
+let wpEdit=null,wpErr="",wpRelockT=null,wpPendV=null,wpPendAt=0;
+// Comme pour un pointage : la case « Modifier » se referme seule après 4 s sans saisie, et un nouveau temps demande un second appui (« Confirmer »).
+function wpRelock(){clearTimeout(wpRelockT);wpRelockT=setTimeout(()=>{if(wpEdit!=null&&wpPendV==null){wpEdit=null;wpErr="";render();}},4000);}
 function wpSet(km,val,isNew){const v=parseEl(val);const s=state(),pts=RACES[cur].pts,E=s.e;let i=1;while(i<pts.length-1&&pts[i][1]<km)i++;
   let lo=0;for(let j=i-1;j>0;j--)if(E[j]!=null){lo=E[j];break;}let hi=null;for(let j=i;j<pts.length;j++)if(E[j]!=null){hi=E[j];break;}
   if(v==null||!isFinite(v)){wpErr="Tape le temps de course, par exemple 152 pour 1h52.";render();return;}
@@ -761,7 +763,7 @@ function band(R,st){let h=`<h2>${R.name} – départ ${clock(st)}</h2><table><tr
   $("band").innerHTML=h+"</table>";}
 let relockT=null,pendingHi=null,pendingT=null,pendingAt=0;
 function armRelock(inp){clearTimeout(relockT);relockT=setTimeout(()=>{if(document.body.contains(inp)&&!inp.readOnly)render();},4000);}
-$("list").addEventListener("input",e=>{if(e.target.matches("input.el")&&relockT&&e.target.dataset.i){const li=e.target.closest("li");if(li&&li.classList.contains("done"))armRelock(e.target);}});
+$("list").addEventListener("input",e=>{if(e.target.matches("input.wpin")&&wpEdit!=null){if(wpPendV!=null){wpPendV=null;render();const i2=document.querySelector("input.wpin");if(i2){i2.value=e.target.value;i2.focus();}}wpRelock();return;}if(e.target.matches("input.el")&&relockT&&e.target.dataset.i){const li=e.target.closest("li");if(li&&li.classList.contains("done"))armRelock(e.target);}});
 function commit(i,raw,fromGps){
   clearTimeout(relockT);
   const s=state(),v=parseEl(raw);
@@ -816,10 +818,20 @@ $("list").addEventListener("click",e=>{
   if(e.target.dataset.wp){const km=+e.target.dataset.wp,inp=e.target.parentNode.querySelector("input.wpin");
     if(inp&&inp.value.trim()&&inp.value.trim()!==inp.dataset.auto){wpSet(km,inp.value,true);return;}
     if(wpCheck(km,e.target))return;wpErr="";if(inp&&inp.value.trim())wpSet(km,inp.value,true);else wpMark(km,true);return;}
-  if(e.target.dataset.wpu){wpEdit=null;wpErr="";wpMark(+e.target.dataset.wpu,false);return;}
-  if(e.target.dataset.wpe){wpEdit=+e.target.dataset.wpe;wpErr="";render();const inp=document.querySelector('input.wpin');if(inp)inp.focus();return;}
-  if(e.target.dataset.wps){const inp=document.querySelector('input.wpin');wpSet(+e.target.dataset.wps,inp?inp.value:"");return;}
-  if(e.target.dataset.wpx){wpEdit=null;wpErr="";render();return;}
+  // Annuler un passage validé : deux appuis, comme « Effacer » un pointage.
+  if(e.target.dataset.wpu){const btn=e.target;
+    if(btn.dataset.armed!=="1"){btn.dataset.armed="1";btn.textContent="Confirmer l'annulation ?";btn.classList.add("armed");
+      clearTimeout(btn._t);btn._t=setTimeout(()=>{btn.dataset.armed="";btn.textContent="Annuler";btn.classList.remove("armed");},3000);return;}
+    clearTimeout(btn._t);wpEdit=null;wpErr="";wpMark(+btn.dataset.wpu,false);return;}
+  if(e.target.dataset.wpe){wpEdit=+e.target.dataset.wpe;wpErr="";wpPendV=null;render();const inp=document.querySelector('input.wpin');if(inp)inp.focus();wpRelock();return;}
+  if(e.target.dataset.wps){const km=+e.target.dataset.wps,inp=document.querySelector('input.wpin'),raw=inp?inp.value:"",v=parseEl(raw),old=(state().w||{})[km];
+    if(v!=null&&isFinite(v)&&old!=null&&v!==Math.round(old)){
+      if(wpPendV!==v){wpPendV=v;wpPendAt=Date.now();clearTimeout(wpRelockT);const b=e.target;b.textContent="Confirmer";b.classList.add("confirm");
+        const sp=b.closest("small");if(sp){const o=sp.querySelector(".wpwarn");if(o)o.remove();sp.insertAdjacentHTML("beforeend",`<span class="wpwarn">Remplacer ${hm(old)} par ${hm(v)} ? Appuie sur Confirmer.</span>`);}
+        wpRelockT=setTimeout(()=>{wpPendV=null;wpEdit=null;wpErr="";render();},8000);return;}
+      if(Date.now()-wpPendAt<800)return;}
+    clearTimeout(wpRelockT);wpPendV=null;wpSet(km,raw);return;}
+  if(e.target.dataset.wpx){clearTimeout(wpRelockT);wpPendV=null;wpEdit=null;wpErr="";render();return;}
   if(e.target.dataset.ok){const inp=e.target.parentNode.querySelector("input.el");commit(+e.target.dataset.ok,inp.value,!!inp.dataset.auto&&inp.value.trim()===inp.dataset.auto);}
   if(e.target.dataset.ed){const btn=e.target,inp=btn.parentNode.querySelector("input.el");inp.readOnly=false;inp.select();inp.focus();
     btn.textContent="Valider";btn.classList.remove("edit");btn.dataset.ok=btn.dataset.ed;delete btn.dataset.ed;armRelock(inp);}
